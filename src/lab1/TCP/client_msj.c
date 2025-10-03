@@ -48,7 +48,7 @@ int main() {
 	//const char* data_to_send = "Hola, RPI via TCP";
 	//send(sock, data_to_send, strlen(data_to_send), 0);
 	mensaje msj;
-	msj.info = 'A';
+	msj.info = 'C';
 	msj.x = rand() % 100;
 	msj.y = rand() % 100;
         send(sock, &msj, sizeof(msj), 0);
@@ -56,18 +56,12 @@ int main() {
 	// receive
 
 	int n = 0;
-	int len = 0, maxlen = 100;
-	char buffer[maxlen];
-	char* pbuffer = buffer;
+	mensaje msj_recv;
+	char buffer[16];
 
 	// will remain open until the server terminates the connection
-	while ((n = recv(sock, pbuffer, maxlen, 0)) > 0) {
-		pbuffer += n;
-		maxlen -= n;
-		len += n;
-
-		buffer[len] = '\0';
-		printf("Recibido: '%s'\n", buffer);
+	while ((n = recv(sock, &msj_recv, sizeof(msj_recv), 0)) > 0) {
+		  printf("Recibido: info=%c  x=%d y=%d\n", msj_recv.info, msj_recv.x, msj_recv.y);
 	}
 
 	// close the socket

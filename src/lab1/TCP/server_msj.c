@@ -5,6 +5,12 @@
 #include <string.h>
 #include <unistd.h>
 
+typedef struct {
+  char info;
+  int x;
+  int y;
+} mensaje;
+
 int main(int argc, char *argv[]) {
 	// port to start the server on
 	int SERVER_PORT = 8878;
@@ -58,24 +64,26 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
+		//int n = 0;
+		//int len = 0, maxlen = 100;
+		//char buffer[maxlen];
+		//char *pbuffer = buffer;
+		
 		int n = 0;
-		int len = 0, maxlen = 100;
-		char buffer[maxlen];
-		char *pbuffer = buffer;
+		mensaje msj;
+		char buffer[16];
 
 		printf("Cliente conectado con IP:  %s\n",
 		       inet_ntoa(client_address.sin_addr));
 
 		// keep running as long as the client keeps the connection open
-		while ((n = recv(sock, pbuffer, maxlen, 0)) > 0) {
-			pbuffer += n;
-			maxlen -= n;
-			len += n;
+		while ((n = recv(sock, &msj, sizeof(msj), 0)) > 0) {
 
-			printf("Recibido: '%s'\n", buffer);
+			printf("Recibido: info=%c  x=%d y=%d\n", msj.info, msj.x, msj.y);
 
 			// echo received content back
-			send(sock, buffer, len, 0);
+			msj.info = 'S';
+			send(sock, &msj,sizeof(msj), 0);
 		}
 
 		close(sock);
