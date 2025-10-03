@@ -3,13 +3,16 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 #include <stdlib.h>
+#include <time.h>
 
 typedef struct {
-  char info;
-  int x;
-  int y;
-} mensaje;
+  int id;
+  float temperatura;
+  char estado;
+  double fecha;
+} info_sensor;
 
 int main() {
 	const char* server_name = "localhost";
@@ -42,25 +45,28 @@ int main() {
 		return 1;
 	}
 
-	// send
-
-	// data that will be sent to the server
-	mensaje msj;
-	msj.info = 'C';
-	msj.x = rand() % 100;
-	msj.y = rand() % 100;
-        send(sock, &msj, sizeof(msj), 0);
-
-	// receive
-
-	int n = 0;
-	mensaje msj_recv;
-	char buffer[16];
-
-	// will remain open until the server terminates the connection
-	while ((n = recv(sock, &msj_recv, sizeof(msj_recv), 0)) > 0) {
-		  printf("Recibido: info=%c  x=%d y=%d\n", msj_recv.info, msj_recv.x, msj_recv.y);
-	}
+	// send and receive
+	
+        int i = 0, n = 0;
+        char respuesta[16];
+        srand(time(NULL));
+        
+        while (i < 11) {
+          // data that will be sent to the server
+           info_sensor sensor;
+           sensor.id = rand() % 50;
+           sensor.temperatura = 11.0 + (float)(rand() % 100) / 25.0;
+           sensor.estado = (rand() % 2 != 0 ) ? 'N' : 'R';
+           sensor.fecha = (double) time (NULL);
+           
+           send(sock, &sensor, sizeof(sensor), 0);
+	    // will remain open until the server terminates the connection
+	    if ((n = recv(sock, &respuesta, sizeof(respuesta), 0)) > 0) {
+		      printf("Respuesta del servidor: %s\n", respuesta);
+	    }
+            i++;
+            sleep(1);
+        }
 
 	// close the socket
 	close(sock);
