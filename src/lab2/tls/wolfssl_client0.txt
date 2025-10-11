@@ -1,0 +1,281 @@
+No.     Time           Source                Destination           Protocol Length Info
+      1 0.000000000    fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 1: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+      2 0.000017810    fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 2: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+      3 2.904086096    10.42.0.1             239.255.255.250       SSDP     214    M-SEARCH * HTTP/1.1 
+
+Frame 3: 214 bytes on wire (1712 bits), 214 bytes captured (1712 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 239.255.255.250
+User Datagram Protocol, Src Port: 36965, Dst Port: 1900
+Simple Service Discovery Protocol
+
+No.     Time           Source                Destination           Protocol Length Info
+      4 3.904943831    10.42.0.1             239.255.255.250       SSDP     214    M-SEARCH * HTTP/1.1 
+
+Frame 4: 214 bytes on wire (1712 bits), 214 bytes captured (1712 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 239.255.255.250
+User Datagram Protocol, Src Port: 36965, Dst Port: 1900
+Simple Service Discovery Protocol
+
+No.     Time           Source                Destination           Protocol Length Info
+      5 4.905534249    10.42.0.1             239.255.255.250       SSDP     214    M-SEARCH * HTTP/1.1 
+
+Frame 5: 214 bytes on wire (1712 bits), 214 bytes captured (1712 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 239.255.255.250
+User Datagram Protocol, Src Port: 36965, Dst Port: 1900
+Simple Service Discovery Protocol
+
+No.     Time           Source                Destination           Protocol Length Info
+      6 5.906973898    10.42.0.1             239.255.255.250       SSDP     214    M-SEARCH * HTTP/1.1 
+
+Frame 6: 214 bytes on wire (1712 bits), 214 bytes captured (1712 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv4mcast_7f:ff:fa (01:00:5e:7f:ff:fa)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 239.255.255.250
+User Datagram Protocol, Src Port: 36965, Dst Port: 1900
+Simple Service Discovery Protocol
+
+No.     Time           Source                Destination           Protocol Length Info
+      7 6.792097434    10.42.0.1             224.0.0.251           MDNS     183    Standard query 0x0000 PTR _ipps._tcp.local, "QM" question PTR _ftp._tcp.local, "QM" question PTR _webdav._tcp.local, "QM" question PTR _webdavs._tcp.local, "QM" question PTR _sftp-ssh._tcp.local, "QM" question PTR _smb._tcp.local, "QM" question PTR _afpovertcp._tcp.local, "QM" question PTR _nfs._tcp.local, "QM" question PTR _ipp._tcp.local, "QM" question
+
+Frame 7: 183 bytes on wire (1464 bits), 183 bytes captured (1464 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv4mcast_fb (01:00:5e:00:00:fb)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 224.0.0.251
+User Datagram Protocol, Src Port: 5353, Dst Port: 5353
+Multicast Domain Name System (query)
+
+No.     Time           Source                Destination           Protocol Length Info
+      8 6.792220293    fe80::e15f:fe01:9730:dc27 ff02::fb              MDNS     203    Standard query 0x0000 PTR _ipps._tcp.local, "QM" question PTR _ftp._tcp.local, "QM" question PTR _webdav._tcp.local, "QM" question PTR _webdavs._tcp.local, "QM" question PTR _sftp-ssh._tcp.local, "QM" question PTR _smb._tcp.local, "QM" question PTR _afpovertcp._tcp.local, "QM" question PTR _nfs._tcp.local, "QM" question PTR _ipp._tcp.local, "QM" question
+
+Frame 8: 203 bytes on wire (1624 bits), 203 bytes captured (1624 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv6mcast_fb (33:33:00:00:00:fb)
+Internet Protocol Version 6, Src: fe80::e15f:fe01:9730:dc27, Dst: ff02::fb
+User Datagram Protocol, Src Port: 5353, Dst Port: 5353
+Multicast Domain Name System (query)
+
+No.     Time           Source                Destination           Protocol Length Info
+      9 7.407812557    fe80::e15f:fe01:9730:dc27 ff02::2               ICMPv6   62     Router Solicitation
+
+Frame 9: 62 bytes on wire (496 bits), 62 bytes captured (496 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: IPv6mcast_02 (33:33:00:00:00:02)
+Internet Protocol Version 6, Src: fe80::e15f:fe01:9730:dc27, Dst: ff02::2
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+     10 8.951540344    10.42.0.240           10.42.0.1             DNS      72     Standard query 0x76c9 A pool.ntp.org
+
+Frame 10: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+Internet Protocol Version 4, Src: 10.42.0.240, Dst: 10.42.0.1
+User Datagram Protocol, Src Port: 57370, Dst Port: 53
+Domain Name System (query)
+
+No.     Time           Source                Destination           Protocol Length Info
+     11 8.951670127    10.42.0.1             10.42.0.240           DNS      72     Standard query response 0x76c9 Refused A pool.ntp.org
+
+Frame 11: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: Espressi_02:18:d0 (34:85:18:02:18:d0)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 10.42.0.240
+User Datagram Protocol, Src Port: 53, Dst Port: 57370
+Domain Name System (response)
+
+No.     Time           Source                Destination           Protocol Length Info
+     12 14.180623603   LiteonTe_89:72:3b     Espressi_02:18:d0     ARP      42     Who has 10.42.0.240? Tell 10.42.0.1
+
+Frame 12: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: Espressi_02:18:d0 (34:85:18:02:18:d0)
+Address Resolution Protocol (request)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    Sender MAC address: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+    Sender IP address: 10.42.0.1
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     13 14.214400370   Espressi_02:18:d0     LiteonTe_89:72:3b     ARP      42     10.42.0.240 is at 34:85:18:02:18:d0
+
+Frame 13: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+Address Resolution Protocol (reply)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: reply (2)
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+    Target IP address: 10.42.0.1
+
+No.     Time           Source                Destination           Protocol Length Info
+     14 15.842703177   Espressi_02:18:d0     Broadcast             ARP      42     ARP Announcement for 10.42.0.240
+
+Frame 14: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Address Resolution Protocol (ARP Announcement)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    [Is gratuitous: True]
+    [Is announcement: True]
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     15 15.842723165   Espressi_02:18:d0     Broadcast             ARP      42     ARP Announcement for 10.42.0.240
+
+Frame 15: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Address Resolution Protocol (ARP Announcement)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    [Is gratuitous: True]
+    [Is announcement: True]
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     16 39.800849924   fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 16: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+     17 39.800867854   fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 17: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+     18 68.954250718   10.42.0.240           10.42.0.1             DNS      72     Standard query 0xe529 A pool.ntp.org
+
+Frame 18: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+Internet Protocol Version 4, Src: 10.42.0.240, Dst: 10.42.0.1
+User Datagram Protocol, Src Port: 22459, Dst Port: 53
+Domain Name System (query)
+
+No.     Time           Source                Destination           Protocol Length Info
+     19 68.954361657   10.42.0.1             10.42.0.240           DNS      72     Standard query response 0xe529 Refused A pool.ntp.org
+
+Frame 19: 72 bytes on wire (576 bits), 72 bytes captured (576 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: Espressi_02:18:d0 (34:85:18:02:18:d0)
+Internet Protocol Version 4, Src: 10.42.0.1, Dst: 10.42.0.240
+User Datagram Protocol, Src Port: 53, Dst Port: 22459
+Domain Name System (response)
+
+No.     Time           Source                Destination           Protocol Length Info
+     20 74.084598297   LiteonTe_89:72:3b     Espressi_02:18:d0     ARP      42     Who has 10.42.0.240? Tell 10.42.0.1
+
+Frame 20: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: LiteonTe_89:72:3b (74:df:bf:89:72:3b), Dst: Espressi_02:18:d0 (34:85:18:02:18:d0)
+Address Resolution Protocol (request)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    Sender MAC address: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+    Sender IP address: 10.42.0.1
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     21 74.179648573   Espressi_02:18:d0     LiteonTe_89:72:3b     ARP      42     10.42.0.240 is at 34:85:18:02:18:d0
+
+Frame 21: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+Address Resolution Protocol (reply)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: reply (2)
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: LiteonTe_89:72:3b (74:df:bf:89:72:3b)
+    Target IP address: 10.42.0.1
+
+No.     Time           Source                Destination           Protocol Length Info
+     22 75.842411225   Espressi_02:18:d0     Broadcast             ARP      42     ARP Announcement for 10.42.0.240
+
+Frame 22: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Address Resolution Protocol (ARP Announcement)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    [Is gratuitous: True]
+    [Is announcement: True]
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     23 75.842428585   Espressi_02:18:d0     Broadcast             ARP      42     ARP Announcement for 10.42.0.240
+
+Frame 23: 42 bytes on wire (336 bits), 42 bytes captured (336 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: Broadcast (ff:ff:ff:ff:ff:ff)
+Address Resolution Protocol (ARP Announcement)
+    Hardware type: Ethernet (1)
+    Protocol type: IPv4 (0x0800)
+    Hardware size: 6
+    Protocol size: 4
+    Opcode: request (1)
+    [Is gratuitous: True]
+    [Is announcement: True]
+    Sender MAC address: Espressi_02:18:d0 (34:85:18:02:18:d0)
+    Sender IP address: 10.42.0.240
+    Target MAC address: 00:00:00_00:00:00 (00:00:00:00:00:00)
+    Target IP address: 10.42.0.240
+
+No.     Time           Source                Destination           Protocol Length Info
+     24 79.800805729   fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 24: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6
+
+No.     Time           Source                Destination           Protocol Length Info
+     25 79.800820293   fe80::3685:18ff:fe02:18d0 ff02::1:ff02:18d0     ICMPv6   86     Multicast Listener Report
+
+Frame 25: 86 bytes on wire (688 bits), 86 bytes captured (688 bits) on interface wlp2s0, id 0
+Ethernet II, Src: Espressi_02:18:d0 (34:85:18:02:18:d0), Dst: IPv6mcast_ff:02:18:d0 (33:33:ff:02:18:d0)
+Internet Protocol Version 6, Src: fe80::3685:18ff:fe02:18d0, Dst: ff02::1:ff02:18d0
+Internet Control Message Protocol v6

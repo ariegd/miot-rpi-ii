@@ -20,6 +20,7 @@
  */
 
 #include "client-tls.h"
+#include "ca_cert_data.h" // ⬅️ ¡Asegúrate de que esta línea esté aquí!
 
 /* Espressif FreeRTOS */
 #ifndef SINGLE_THREADED
@@ -46,7 +47,7 @@
     #include <wolfssl/wolfcrypt/wc_mlkem.h>
 #endif
 #if defined(USE_CERT_BUFFERS_2048) || defined(USE_CERT_BUFFERS_1024)
-    #include <wolfssl/certs_test.h>
+    #include <wolfssl/certs_test.h>  
 #endif
 #ifdef WOLFSSL_TRACK_MEMORY
     #include <wolfssl/wolfcrypt/mem_track.h>
@@ -326,9 +327,15 @@ WOLFSSL_ESP_TASK tls_smp_client_task(void* args)
         /* Load client certificates into WOLFSSL_CTX */
         WOLFSSL_MSG("Loading... CA cert");
         ret_i = wolfSSL_CTX_load_verify_buffer(ctx,
+                                     (const unsigned char*)ca_cert_pem_start, // <-- Usa tu buffer
+                                     ca_cert_pem_len,                          // <-- Usa el tamaño
+                                     WOLFSSL_FILETYPE_PEM);
+        /*
+        ret_i = wolfSSL_CTX_load_verify_buffer(ctx,
                                          CTX_CA_CERT,
                                          CTX_CA_CERT_SIZE,
                                          CTX_CA_CERT_TYPE);
+        */
         if (ret_i != WOLFSSL_SUCCESS) {
             ESP_LOGE(TAG, "ERROR: failed to load CA cert %d, "
                           "please check the file.\n", ret_i) ;
