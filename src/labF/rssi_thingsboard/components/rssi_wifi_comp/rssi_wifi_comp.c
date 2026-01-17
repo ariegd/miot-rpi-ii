@@ -170,6 +170,8 @@ void obtener_rssi_wifi() {
         ESP_LOGI(TAG, "---------------------------------------");
         ESP_LOGI(TAG, "Conectado a SSID: %s", ap_info.ssid);
         ESP_LOGI(TAG, "RSSI actual: %d dBm", ap_info.rssi);
+        ESP_LOGI(TAG, "Dirección MAC del router: %d", ap_info.bssid);
+        ESP_LOGI(TAG, "Canal de transmisión: %d", ap_info.primary);
         
         // Aquí podrías serializar ap_info.rssi a JSON o CBOR para ThingsBoard
     } else {

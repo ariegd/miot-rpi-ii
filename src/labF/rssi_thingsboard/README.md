@@ -2,31 +2,46 @@
 | ----------------- | ----- | -------- | -------- | -------- | -------- | --------- | -------- | --------- | -------- | -------- | -------- | -------- | ----- |
 
 #  Práctica Final RPI-II
-```
-Máster IoT, curso 25-26
- 	└── Autor
- 		    └── Ariel Gámez <arielg01@ucm.es>
-```
-[repositorio](https://github.com/ariegd/miot-aniot/tree/labF/src/labF) en GitHub
-[video](https://youtu.be/agf_GGZS18o)
 
-## Objetivos
+## Instalación Mosquitto
+1. Actualiza los repositorios:
 ```
-■  Seleccionar y procesar una estadística proporcionada por el sistema (ej. RSSI u otra disponible en ESP-IDF).
-■  Serializar los datos usando un formato eficiente (JSON, CBOR o PBUF).
-■  Transmitir datos cifrados empleando MQTT (MQTTS) o CoAP/LwM2M con DTLS.
-■  Integrar la solución con ThingsBoard para telemetría, control de parámetros y visualización.
-■  Permitir la actualización remota del periodo de envío desde ThingsBoard.
-■  Representar la estadística de un conjunto de 4 nodos a lo largo del tiempo.
+bash
+sudo apt update
 ```
 
+2. Instala Mosquitto y sus clientes: El paquete mosquitto-clients incluye las herramientas `mosquitto_sub` y `mosquitto_pub` para pruebas.
+```
+bash
+sudo apt install mosquitto mosquitto-clients
+```
 
-## Directorio del proyecto
-A continuación se muestra una explicación de los archivos en la carpeta del proyecto.
+### Verificación y funcionamiento
+**Paso 1**. Comprueba el estado del servicio:
 ```
-├── gattc_wifih
-├── gatts_tourch
-├── server
-├── wifir_coapc
-└── README.md                  
+bash
+sudo systemctl status mosquitto
 ```
+
+Debería mostrar active (running). Si no está activo, inicia y habilita el arranque automático:
+```
+bash
+sudo systemctl start mosquitto
+sudo systemctl enable mosquitto
+```
+
+**Paso 2**. Prueba básica (dos terminales):
+1. Terminal 1 (Suscriptor): Abre una terminal y suscríbete a un tema (por ejemplo, test/topic).
+```
+bash
+mosquitto_sub -h localhost -t "test/topic"
+```
+
+2. Terminal 2 (Publicador): En otra terminal, publica un mensaje en el mismo tema.
+```
+bash
+mosquitto_pub -h localhost -t "test/topic" -m "¡Hola desde Mosquitto!"
+```
+
+3. Verificación: Verás el mensaje "¡Hola desde Mosquitto!" aparecer en la Terminal 1, confirmando que el broker funciona y reenvía mensajes. 
+
