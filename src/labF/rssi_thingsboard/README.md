@@ -14,7 +14,7 @@ Máster IoT, curso 25-26
 ```
 ■  Seleccionar y procesar una estadística proporcionada por el sistema (ej. RSSI u otra disponible en ESP-IDF).
 ■  Serializar los datos usando un formato eficiente (JSON, CBOR o PBUF).
-■ Transmitir datos cifrados empleando MQTT (MQTTS) o CoAP/LwM2M con DTLS.
+■  Transmitir datos cifrados empleando MQTT (MQTTS) o CoAP/LwM2M con DTLS.
 ■  Integrar la solución con ThingsBoard para telemetría, control de parámetros y visualización.
 ■  Permitir la actualización remota del periodo de envío desde ThingsBoard.
 ■  Representar la estadística de un conjunto de 4 nodos a lo largo del tiempo.
