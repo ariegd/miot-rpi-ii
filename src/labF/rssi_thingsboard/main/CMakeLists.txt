@@ -1,4 +1,3 @@
 idf_component_register(SRCS "rssi_thingsboard.c"
-                       PRIV_REQUIRES spi_flash 
-                       INCLUDE_DIRS ""
-                       REQUIRES rssi_wifi_comp)
+                                                INCLUDE_DIRS "."
+                                                REQUIRES nvs_flash esp_event esp_netif mqtts_comp rssi_wifi_comp)

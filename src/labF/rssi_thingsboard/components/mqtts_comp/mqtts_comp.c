@@ -181,8 +181,9 @@ void mqtt_fix_task(void* pvParameters) {
     vTaskDelete(NULL);
 }
 
-void app_main(void)
+void mqtts_task(void *pvParameters)
 {
+/*
     ESP_LOGI(TAG, "[APP] Startup..");
     ESP_LOGI(TAG, "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
     ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
@@ -206,15 +207,19 @@ void app_main(void)
     // Así, aunque example_connect se bloquee, la tarea ya está corriendo
     xTaskCreate(&mqtt_fix_task, "mqtt_fix_task", 8192, NULL, 5, NULL);
 
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
+
     ESP_LOGI(TAG, "----------------- Linea 182 ---------------------");
     //ESP_ERROR_CHECK(example_connect());
     example_connect();
     vTaskDelay(pdMS_TO_TICKS(2000)); // Espera 2 segundos
+*/
+    ESP_LOGI(TAG, "----------------- Linea 216 ---------------------");
+    mqtt_app_start();
+    // SOLUCIÓN: Matar la tarea al finalizar la configuración
+     vTaskDelete(NULL);
+}
 
-    ESP_LOGI(TAG, "----------------- Linea 187 ---------------------");
-    //mqtt_app_start();
+void mqtts_start(void)
+{
+    xTaskCreate(&mqtts_task, "mqtts_task", 4096, NULL, 1, NULL);
 }
