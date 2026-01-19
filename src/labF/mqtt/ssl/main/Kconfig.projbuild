@@ -2,9 +2,16 @@ menu "Example Configuration"
 
     config BROKER_URI
         string "Broker URL"
-        default "mqtts://mqtt.eclipseprojects.io:8883"
+        default "mqtts://test.mosquitto.org:8883"
         help
             URL of an mqtt broker which this example connects to.
+
+   config CERT_SOURCE_HARDCODED
+        bool "Usar Certificado Mosquitto (Fijo en Código)"
+        default n
+        help
+            Si se marca, usa el certificado de mosquitto.org definido manualmente en app_main.c.
+            Si se desmarca, el código intentará usar el archivo .pem externo.
 
     config BROKER_CERTIFICATE_OVERRIDE
         string "Broker certificate override"
