@@ -19,6 +19,8 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
+#include "cJSON.h"
+
 /* The examples use WiFi configuration that you can set via project configuration menu
 
    If you'd rather not, just change the below entries to strings with
@@ -157,7 +159,7 @@ void wifi_init_sta(void)
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 }
-
+/*
 void obtener_rssi_wifi() {
     wifi_ap_record_t ap_info;
     
@@ -178,6 +180,40 @@ void obtener_rssi_wifi() {
         ESP_LOGE(TAG, "Error al obtener info del AP. ¿Está el WiFi conectado?");
     }
 }
+*/
+void obtener_rssi_wifi() {
+    wifi_ap_record_t ap_info;
+    esp_err_t res = esp_wifi_sta_get_ap_info(&ap_info);
+
+    if (res == ESP_OK) {
+        char *serialized_output = NULL;
+
+        #if defined(CONFIG_SERIALIZE_JSON)
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, "rssi", ap_info.rssi);
+            cJSON_AddStringToObject(root, "status", "online");
+            serialized_output = cJSON_PrintUnformatted(root);
+            cJSON_Delete(root);
+            ESP_LOGI(TAG, "Formato JSON generado: %s", serialized_output);
+
+        #elif defined(CONFIG_SERIALIZE_CBOR)
+            // Aquí iría la lógica de tinycbor
+            ESP_LOGI(TAG, "Formato seleccionado: CBOR (requiere implementación)");
+            serialized_output = strdup("Binario CBOR");
+
+        #elif defined(CONFIG_SERIALIZE_PBUF)
+            // Aquí iría la lógica de Protobuf
+            ESP_LOGI(TAG, "Formato seleccionado: PBUF (requiere implementación)");
+            serialized_output = strdup("Binario PBUF");
+        #endif
+
+        if (serialized_output) {
+            // Aquí enviarías 'serialized_output' por MQTT
+            free(serialized_output);
+        }
+    }
+}
+
 
 void rssi_wifi_task(void *pvParameters)
 {

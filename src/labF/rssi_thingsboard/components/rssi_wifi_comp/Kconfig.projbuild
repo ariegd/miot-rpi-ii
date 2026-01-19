@@ -65,5 +65,19 @@ menu "RSSI-WiFi Configuration"
         config ESP_WIFI_AUTH_WAPI_PSK
             bool "WAPI PSK"
     endchoice
+    
+   choice SERIALIZATION_FORMAT
+        prompt "Serialization Format for ThingsBoard"
+        default SERIALIZE_JSON
+        help
+            Select the format to send RSSI data.
+
+        config SERIALIZE_JSON
+            bool "JSON"
+        config SERIALIZE_CBOR
+            bool "CBOR"
+        config SERIALIZE_PBUF
+            bool "Protocol Buffers (PBUF)"
+    endchoice
 
 endmenu
