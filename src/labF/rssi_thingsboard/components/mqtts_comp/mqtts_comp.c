@@ -27,6 +27,11 @@
 
 #include "sdkconfig.h"
 
+// Para el  actualizar el tiempo
+#include <time.h>
+#include <sys/time.h>
+#include "esp_sntp.h"
+
 static const char *TAG = "mqtts_example";
 
 // Variable global para guardar el handle del cliente
@@ -79,6 +84,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        /* ThingsBoard no reconoce estos tópicos y desconecta al cliente al recibirlos.
         msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
         ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
@@ -87,6 +93,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
         msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
         ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+        */
         break;
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -159,7 +166,8 @@ static void mqtt_app_start(void)
         },
     #if defined(CONFIG_BROKER_THINGSBOARD)
         .credentials = {
-              .username = CONFIG_THINGSBOARD_ACCESS_TOKEN, // <--- OBLIGATORIO
+              //.username = CONFIG_THINGSBOARD_ACCESS_TOKEN, // <--- OBLIGATORIO
+              .username = "odpvh2wr539x57lmevg7", // El token de tu imagen
           },
     #endif
         .network.timeout_ms = 10000, // <-- redes ruidosas
@@ -197,41 +205,41 @@ void mqtt_enviar_telemetria(const char *topic, const char *data) {
     }
 }
 
+static void obtener_hora_sntp(void)
+{
+    ESP_LOGI(TAG, "Inicializando SNTP para sincronizar hora...");
+    
+    // Configura el servidor NTP (puedes usar el de Google o pool.ntp.org)
+    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setservername(0, "pool.ntp.org");
+    esp_sntp_init();
+
+    // Esperar a que la hora se actualice
+    int retry = 0;
+    const int retry_count = 15;
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
+        ESP_LOGI(TAG, "Esperando respuesta de servidor NTP... (%d/%d)", retry, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+
+    // Mostrar la hora actual en el log para confirmar
+    time_t now;
+    struct tm timeinfo;
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    char strftime_buf[64];
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(TAG, "Hora sincronizada: %s", strftime_buf);
+}
+
 void mqtts_task(void *pvParameters)
 {
-/*
-    ESP_LOGI(TAG, "[APP] Startup..");
-    ESP_LOGI(TAG, "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
-    ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
+    ESP_LOGI(TAG, "----------------- Sincronizando Reloj ---------------------");
+    obtener_hora_sntp(); // <--- Paso obligatorio para MQTTS
 
-    esp_log_level_set("*", ESP_LOG_INFO);
-    esp_log_level_set("esp-tls", ESP_LOG_VERBOSE);
-    esp_log_level_set("mqtt_client", ESP_LOG_VERBOSE);
-    esp_log_level_set("mqtt_example", ESP_LOG_VERBOSE);
-    esp_log_level_set("transport_base", ESP_LOG_VERBOSE);
-    esp_log_level_set("transport", ESP_LOG_VERBOSE);
-    esp_log_level_set("outbox", ESP_LOG_VERBOSE);
-
-    ESP_LOGI(TAG, "----------------- Linea 167 ---------------------");
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_LOGI(TAG, "----------------- Linea 169 ---------------------");
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_LOGI(TAG, "----------------- Linea 171 ---------------------");
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    
-    // Lanzamos la tarea de MQTT ANTES del ejemplo_connect
-    // Así, aunque example_connect se bloquee, la tarea ya está corriendo
-    xTaskCreate(&mqtt_fix_task, "mqtt_fix_task", 8192, NULL, 5, NULL);
-
-
-    ESP_LOGI(TAG, "----------------- Linea 182 ---------------------");
-    //ESP_ERROR_CHECK(example_connect());
-    example_connect();
-    vTaskDelay(pdMS_TO_TICKS(2000)); // Espera 2 segundos
-*/
-    ESP_LOGI(TAG, "----------------- Linea 216 ---------------------");
+    ESP_LOGI(TAG, "----------------- Iniciando MQTT ---------------------");
     mqtt_app_start();
-    // SOLUCIÓN: Matar la tarea al finalizar la configuración
+    
      vTaskDelete(NULL);
 }
 
