@@ -20,6 +20,7 @@
 #include "lwip/sys.h"
 
 #include "cJSON.h"
+#include "mqtts_comp.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu
 
@@ -209,6 +210,9 @@ void obtener_rssi_wifi() {
 
         if (serialized_output) {
             // Aquí enviarías 'serialized_output' por MQTT
+            ESP_LOGI(TAG, "Datos serializados: %s", serialized_output);
+            // "v1/devices/me/telemetry"
+            mqtt_enviar_telemetria("/topic/qos0", serialized_output);
             free(serialized_output);
         }
     }

@@ -28,6 +28,9 @@
 
 static const char *TAG = "mqtts_example";
 
+// Variable global para guardar el handle del cliente
+static esp_mqtt_client_handle_t global_client = NULL;
+
 #if defined(CONFIG_CERT_SOURCE_HARDCODED)
 // OPCIÓN 1: Embebido directamente como texto en el código
 const char *mqtt_cert_ptr = 
@@ -164,10 +167,14 @@ static void mqtt_app_start(void)
     };
 
     ESP_LOGI(TAG, "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
+    //esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
     /* The last argument may be used to pass data to the event handler, in this example mqtt_event_handler */
-    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
-    esp_mqtt_client_start(client);
+    // esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+    // esp_mqtt_client_start(client);
+    
+    global_client = esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_register_event(global_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
+    esp_mqtt_client_start(global_client);
 }
 
 // Esta es la función que correrá en paralelo
@@ -179,6 +186,16 @@ void mqtt_fix_task(void* pvParameters) {
     mqtt_app_start();
     
     vTaskDelete(NULL);
+}
+
+// NUEVA FUNCIÓN: Para que el WiFi la llame
+void mqtt_enviar_telemetria(const char *topic, const char *data) {
+    if (global_client != NULL) {
+        int msg_id = esp_mqtt_client_publish(global_client, topic, data, 0, 1, 0);
+        ESP_LOGI(TAG, "Enviando a ThingsBoard, msg_id=%d", msg_id);
+    } else {
+        ESP_LOGW(TAG, "MQTT no inicializado todavía.");
+    }
 }
 
 void mqtts_task(void *pvParameters)
