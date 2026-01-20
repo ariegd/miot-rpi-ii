@@ -207,31 +207,42 @@ void mqtt_enviar_telemetria(const char *topic, const char *data) {
 
 static void obtener_hora_sntp(void)
 {
-    ESP_LOGI(TAG, "Inicializando SNTP para sincronizar hora...");
+    ESP_LOGI(TAG, "Inicializando SNTP...");
     
-    // Configura el servidor NTP (puedes usar el de Google o pool.ntp.org)
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    esp_sntp_setservername(0, "pool.ntp.org");
+    // Usar esp_sntp_... para compatibilidad con versiones modernas de IDF
+    if (esp_sntp_enabled()) {
+        esp_sntp_stop();
+    }
+
+    esp_sntp_setoperatingmode(ESP_SNTP_OPMODE_POLL);
+    
+    // Servidores NTP
+    esp_sntp_setservername(0, "time.google.com"); 
+    esp_sntp_setservername(1, "pool.ntp.org");
+    
     esp_sntp_init();
 
-    // Esperar a que la hora se actualice
+    // Esperar a que la hora se sincronice
     int retry = 0;
     const int retry_count = 15;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
-        ESP_LOGI(TAG, "Esperando respuesta de servidor NTP... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Esperando respuesta NTP... (%d/%d)", retry, retry_count);
+        vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
-    // Mostrar la hora actual en el log para confirmar
     time_t now;
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    char strftime_buf[64];
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "Hora sincronizada: %s", strftime_buf);
-}
 
+    if (timeinfo.tm_year < (2020 - 1900)) {
+        ESP_LOGE(TAG, "ERROR: La hora sigue siendo 1970. Revisa la conexión UDP/NTP.");
+    } else {
+        char strftime_buf[64];
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        ESP_LOGI(TAG, "Hora sincronizada correctamente: %s", strftime_buf);
+    }
+}
 void mqtts_task(void *pvParameters)
 {
     ESP_LOGI(TAG, "----------------- Sincronizando Reloj ---------------------");
