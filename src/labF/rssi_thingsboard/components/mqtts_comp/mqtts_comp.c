@@ -18,6 +18,7 @@
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
 
+#include "certs.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "esp_tls.h"
@@ -30,40 +31,16 @@ static const char *TAG = "mqtts_example";
 
 // Variable global para guardar el handle del cliente
 static esp_mqtt_client_handle_t global_client = NULL;
+const char *mqtt_cert_ptr = NULL;
 
 #if defined(CONFIG_CERT_SOURCE_HARDCODED)
 // OPCIÓN 1: Embebido directamente como texto en el código
-const char *mqtt_cert_ptr = 
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIEAzCCAuugAwIBAgIUBY1hlCGvdj4NhBXkZ/uLUZNILAwwDQYJKoZIhvcNAQEL\n"
-    "BQAwgZAxCzAJBgNVBAYTAkdCMRcwFQYDVQQIDA5Vbml0ZWQgS2luZ2RvbTEOMAwG\n"
-    "A1UEBwwFRGVyYnkxEjAQBgNVBAoMCU1vc3F1aXR0bzELMAkGA1UECwwCQ0ExFjAU\n"
-    "BgNVBAMMDW1vc3F1aXR0by5vcmcxHzAdBgkqhkiG9w0BCQEWEHJvZ2VyQGF0Y2hv\n"
-    "by5vcmcwHhcNMjAwNjA5MTEwNjM5WhcNMzAwNjA3MTEwNjM5WjCBkDELMAkGA1UE\n"
-    "BhMCR0IxFzAVBgNVBAgMDlVuaXRlZCBLaW5nZG9tMQ4wDAYDVQQHDAVEZXJieTES\n"
-    "MBAGA1UECgwJTW9zcXVpdHRvMQswCQYDVQQLDAJDQTEWMBQGA1UEAwwNbW9zcXVp\n"
-    "dHRvLm9yZzEfMB0GCSqGSIb3DQEJARYQcm9nZXJAYXRjaG9vLm9yZzCCASIwDQYJ\n"
-    "KoZIhvcNAQEBBQADggEPADCCAQoCggEBAME0HKmIzfTOwkKLT3THHe+ObdizamPg\n"
-    "UZmD64Tf3zJdNeYGYn4CEXbyP6fy3tWc8S2boW6dzrH8SdFf9uo320GJA9B7U1FW\n"
-    "Te3xda/Lm3JFfaHjkWw7jBwcauQZjpGINHapHRlpiCZsquAthOgxW9SgDgYlGzEA\n"
-    "s06pkEFiMw+qDfLo/sxFKB6vQlFekMeCymjLCbNwPJyqyhFmPWwio/PDMruBTzPH\n"
-    "3cioBnrJWKXc3OjXdLGFJOfj7pP0j/dr2LH72eSvv3PQQFl90CZPFhrCUcRHSSxo\n"
-    "E6yjGOdnz7f6PveLIB574kQORwt8ePn0yidrTC1ictikED3nHYhMUOUCAwEAAaNT\n"
-    "MFEwHQYDVR0OBBYEFPVV6xBUFPiGKDyo5V3+Hbh4N9YSMB8GA1UdIwQYMBaAFPVV\n"
-    "6xBUFPiGKDyo5V3+Hbh4N9YSMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQEL\n"
-    "BQADggEBAGa9kS21N70ThM6/Hj9D7mbVxKLBjVWe2TPsGfbl3rEDfZ+OKRZ2j6AC\n"
-    "6r7jb4TZO3dzF2p6dgbrlU71Y/4K0TdzIjRj3cQ3KSm41JvUQ0hZ/c04iGDg/xWf\n"
-    "+pp58nfPAYwuerruPNWmlStWAXf0UTqRtg4hQDWBuUFDJTuWuuBvEXudz74eh/wK\n"
-    "sMwfu1HFvjy5Z0iMDU8PUDepjVolOCue9ashlS4EB5IECdSR2TItnAIiIwimx839\n"
-    "LdUdRudafMu5T5Xma182OC0/u/xRlEm+tvKGGmfFcN0piqVl8OrSPBgIlb+1IKJE\n"
-    "m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=\n"
-    "-----END CERTIFICATE-----";
 #elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
-const char *mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
+//const char *mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
 #else
 extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_eclipseprojects_io_pem_start");
-const char *mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
+//const char *mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
 #endif
 extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
 
@@ -156,6 +133,17 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 static void mqtt_app_start(void)
 {
+// ASIGNACIÓN EN TIEMPO DE EJECUCIÓN:
+    #if defined(CONFIG_CERT_SOURCE_HARDCODED)
+        mqtt_cert_ptr = mqtt_cert_mosquitto_ptr; // Esto ahora es legal y funciona
+    #elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
+        mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
+    #else
+        mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
+    #endif
+
+
+
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = CONFIG_BROKER_URI,
