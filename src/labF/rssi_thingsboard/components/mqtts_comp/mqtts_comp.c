@@ -33,7 +33,7 @@ static const char *TAG = "mqtts_example";
 static esp_mqtt_client_handle_t global_client = NULL;
 const char *mqtt_cert_ptr = NULL;
 
-#if defined(CONFIG_CERT_SOURCE_HARDCODED)
+#if defined(CONFIG_BROKER_MOSQUITTO)
 // OPCIÓN 1: Embebido directamente como texto en el código
 #elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
 static const uint8_t mqtt_eclipseprojects_io_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END CERTIFICATE-----";
@@ -134,8 +134,10 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 static void mqtt_app_start(void)
 {
 // ASIGNACIÓN EN TIEMPO DE EJECUCIÓN:
-    #if defined(CONFIG_CERT_SOURCE_HARDCODED)
+    #if defined(CONFIG_BROKER_MOSQUITTO)
         mqtt_cert_ptr = mqtt_cert_mosquitto_ptr; // Esto ahora es legal y funciona
+    #elif defined(CONFIG_BROKER_THINGSBOARD)
+        mqtt_cert_ptr = mqtt_cert_thingsboard_ptr;
     #elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
         mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
     #else
@@ -143,14 +145,23 @@ static void mqtt_app_start(void)
     #endif
 
 
-
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
+    #if defined(CONFIG_BROKER_MOSQUITTO)
+            .address.uri = "mqtts://test.mosquitto.org:8883",// Esto ahora es legal y funciona
+    #elif defined(CONFIG_BROKER_THINGSBOARD)
+            .address.uri ="mqtts://demo.thingsboard.io:8883",
+    #else
             .address.uri = CONFIG_BROKER_URI,
+    #endif
             .verification.skip_cert_common_name_check = true,             //<--es probable que el nombre del host no coincida.
-            //.verification.certificate = (const char *)mqtt_eclipseprojects_io_pem_start
             .verification.certificate = mqtt_cert_ptr
         },
+    #if defined(CONFIG_BROKER_THINGSBOARD)
+        .credentials = {
+              .username = CONFIG_THINGSBOARD_ACCESS_TOKEN, // <--- OBLIGATORIO
+          },
+    #endif
         .network.timeout_ms = 10000, // <-- redes ruidosas
     };
 

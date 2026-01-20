@@ -1,17 +1,41 @@
 menu "MQTTS Configuration"
 
+   choice BROKER_SELECTION
+        prompt "Seleccionar destino del Broker MQTT"
+        default BROKER_THINGSBOARD
+        help
+            Elija el servidor preconfigurado o una dirección personalizada. 
+
+        config BROKER_MOSQUITTO
+            bool "Mosquitto Test (test.mosquitto.org)"
+
+        config BROKER_THINGSBOARD
+            bool "ThingsBoard Demo (demo.thingsboard.io)"
+
+        config BROKER_CUSTOM_IP
+            bool "Dirección IP Local / Personalizada"
+    endchoice
+    
+    config THINGSBOARD_ACCESS_TOKEN
+        string "ThingsBoard Access Token"
+        default "odpvh2wr539x57lmevg7"
+        depends on BROKER_THINGSBOARD 
+        help
+                Token de acceso del dispositivo creado en demo.thingsboard.io.
+        
     config BROKER_URI
         string "Broker URL"
-        default "mqtts://test.mosquitto.org:8883"
+        depends on BROKER_CUSTOM_IP
+        default "mqtts://10.174.33.72:8883"
         help
-            URL of an mqtt broker which this example connects to.
+            URL of an mqtt broker which this example connects to. [cite: 2, 7]
 
-   config CERT_SOURCE_HARDCODED
-        bool "Usar Certificado Mosquitto (Fijo en Código)"
-        default n
-        help
-            Si se marca, usa el certificado de mosquitto.org definido manualmente en app_main.c.
-            Si se desmarca, el código intentará usar el archivo .pem externo.
+    # Estas variables se mantienen ocultas pero calculan el valor para el código C
+    config BROKER_URI_INTERNAL
+        string
+        default "mqtts://demo.thingsboard.io:8883" if BROKER_THINGSBOARD
+        default "mqtts://test.mosquitto.org:8883" if BROKER_MOSQUITTO
+        default BROKER_URI if BROKER_CUSTOM_IP
 
     config BROKER_CERTIFICATE_OVERRIDE
         string "Broker certificate override"
