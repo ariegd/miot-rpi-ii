@@ -3,6 +3,12 @@
 
 #  Práctica Final RPI-II
 
+## Para lograr el provisionamiento automático (Device Provisioning) en ESP-IDF
+Esta es una implementación completa y profesional. Para lograr el provisionamiento automático (Device Provisioning) en ESP-IDF tal como lo hace el script de Python, necesitamos implementar una máquina de estados sencilla:
+1. **Estado 1 (Inicio)**: Verificar en la memoria no volátil (NVS) si ya tenemos un Token guardado.
+2. **Estado 2 (Provisionamiento)**: Si no hay Token, conectarse como usuario "provision", enviar las claves (Key/Secret), recibir el Token y guardarlo en NVS.
+3. **Estado 3 (Operación)**: Si ya hay Token (o acabamos de recibirlo), conectarse normalmente para enviar telemetría.
+
 ## Instalación Mosquitto
 1. Actualiza los repositorios:
 ```

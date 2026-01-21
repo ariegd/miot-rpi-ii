@@ -15,20 +15,27 @@ menu "MQTTS Configuration"
         config BROKER_CUSTOM_IP
             bool "Dirección IP Local / Personalizada"
     endchoice
-    
-    config THINGSBOARD_ACCESS_TOKEN
-        string "ThingsBoard Access Token"
-        default "odpvh2wr539x57lmevg7"
-        depends on BROKER_THINGSBOARD 
-        help
-                Token de acceso del dispositivo creado en demo.thingsboard.io.
+                
+     config TB_PROVISION_KEY
+          string "ThingsBoard Provision Device Key"
+          default "PUT_YOUR_KEY_HERE"
+          depends on BROKER_THINGSBOARD 
+          help
+              Key obtenida en Device Profiles -> Tu Perfil -> Device Provisioning.
+
+     config TB_PROVISION_SECRET
+         string "ThingsBoard Provision Device Secret"
+         default "PUT_YOUR_SECRET_HERE"
+         depends on BROKER_THINGSBOARD 
+         help
+             Secret obtenido en Device Profiles -> Tu Perfil -> Device Provisioning.
         
-    config BROKER_URI
-        string "Broker URL"
-        depends on BROKER_CUSTOM_IP
-        default "mqtts://10.174.33.72:8883"
-        help
-            URL of an mqtt broker which this example connects to. [cite: 2, 7]
+     config BROKER_URI
+         string "Broker URL"
+         depends on BROKER_CUSTOM_IP
+         default "mqtts://10.174.33.72:8883"
+         help
+             URL of an mqtt broker which this example connects to. [cite: 2, 7]
 
     # Estas variables se mantienen ocultas pero calculan el valor para el código C
     config BROKER_URI_INTERNAL
