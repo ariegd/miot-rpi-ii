@@ -3,6 +3,27 @@
 
 #  Práctica Final RPI-II
 
+## Como asegurar que el ESP32 capture correctamente los cambios realizados desde el widget de Update Multiple Attributes en ThingsBoard
+### Paso 1. Cambiar el Ámbito (Scope) en el Widget
+Basado en tu imagen, sigue esta ruta:
+1. En la pestaña Datos, haz clic en el icono del lápiz (editar) que aparece al lado de la clave `intervalo_envio`.
+2. Se abrirá una ventana emergente llamada "Configuración de la clave de datos".
+3. Busca la sección Configuración del widget o Ajustes avanzados.
+4. Allí encontrarás el menú desplegable Attribute scope (Ámbito del atributo). Cámbialo de "Server Attribute" a "Shared Attribute".
+5. Haz clic en Aplicar y luego en Guardar en el tablero principal.
+
+### Paso 2. Por qué es obligatorio usar "Shared Attribute"
+El código de tu ESP32 está suscrito al tópico `v1/devices/me/attributes`. En el ecosistema de ThingsBoard:
+* **Server Attributes**: Son privados para el servidor. El ESP32 no recibe notificaciones cuando cambian.
+* **Shared Attributes**: Están diseñados para ser compartidos con el dispositivo. Cualquier cambio en estos activará un mensaje MQTT que tu mqtt_event_handler podrá capturar.
+
+
+## ¿Por qué no se actualizaba antes?
+Existen tres razones comunes basadas en tu log y el código previo:
+1. **Estructura del JSON**: Al solicitar el atributo con `attributes/request/1`, ThingsBoard responde con `{"shared": {"intervalo_envio": 10000}}`. Sin embargo, cuando cambias el widget y pulsas "Guardar", ThingsBoard envía directamente {"intervalo_envio": 15000}. El código ahora maneja ambos casos.
+2. **Tipo de Atributo**: Asegúrate de que en el widget de ThingsBoard (el de la imagen image_b8bc98.png) la clave `intervalo_envio` esté configurada como Atributo Compartido (Shared Attribute). Si se guarda como "Server Attribute", el ESP32 nunca recibirá la notificación automática.
+3. **Bucle de Tarea**: Verifica que en tu `mqtts_task`, el `vTaskDelay` use la variable `intervalo_envio`.
+
 ## Telemetría periódica y Atributos compartidos para configuración remota
 Resumen del Flujo
 1. Arranque: El ESP32 se conecta. Si ya tiene token, se suscribe a `v1/devices/me/attributes`.

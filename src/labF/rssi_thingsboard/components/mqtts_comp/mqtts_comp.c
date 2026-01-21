@@ -50,10 +50,8 @@ static const char *TAG = "mqtts_example";
 static esp_mqtt_client_handle_t global_client = NULL;
 const char *mqtt_cert_ptr = NULL;
 
-//--------A. Variables Globales Nuevas --------
 // Variable global para el intervalo (por defecto 5000 ms / 5 seg)
 static int intervalo_envio = 5000;
-//-------- FIN A. Variables Globales Nuevas --------
 
 #if defined(CONFIG_BROKER_MOSQUITTO)
 // OPCIÓN 1: Embebido directamente como texto en el código
@@ -183,7 +181,7 @@ static esp_err_t load_token_from_nvs(void) {
     return err;
 }
 
-//-------- B. Actualizar mqtt_event_handler --------
+//-------- 1. Código del mqtt_event_handler Actualizado --------
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     esp_mqtt_event_handle_t event = event_data;
@@ -194,12 +192,11 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT Conectado.");
         
         if (is_provisioning_mode) {
-            // --- LÓGICA DE PROVISIONAMIENTO (Igual que tenías) ---
             ESP_LOGI(TAG, "PROVISIONING: Iniciando secuencia...");
             esp_mqtt_client_subscribe(client, "/provision/response", 1);
             
             cJSON *root = cJSON_CreateObject();
-            cJSON_AddStringToObject(root, "deviceName", "ESP32_Lab_Final");
+            cJSON_AddStringToObject(root, "deviceName", "ESP32_Auto_Gen");
             cJSON_AddStringToObject(root, "provisionDeviceKey", TB_PROV_KEY);
             cJSON_AddStringToObject(root, "provisionDeviceSecret", TB_PROV_SECRET);
             char *post_data = cJSON_PrintUnformatted(root);
@@ -207,56 +204,74 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
             esp_mqtt_client_publish(client, "/provision/request", post_data, 0, 1, 0);
             free(post_data);
             cJSON_Delete(root);
-
         } else {
-            // --- LÓGICA DE OPERACIÓN NORMAL ---
             ESP_LOGI(TAG, "OPERACIÓN: Listo para telemetría.");
             
-            // 1. Suscribirse a cambios de atributos (para recibir intervalo_envio dinámicamente)
+            // SUSCRIPCIÓN CRÍTICA: Para recibir cambios del Dashboard en tiempo real
             esp_mqtt_client_subscribe(client, "v1/devices/me/attributes", 1);
             
-            // 2. Solicitar los valores actuales al arrancar (por si cambiaron mientras estaba apagado)
+            // SOLICITUD INICIAL: Para leer el valor actual al arrancar
             esp_mqtt_client_publish(client, "v1/devices/me/attributes/request/1", "{\"sharedKeys\":\"intervalo_envio\"}", 0, 1, 0);
         }
         break;
 
     case MQTT_EVENT_DATA:
-        // --- RESPUESTA DE PROVISIONAMIENTO ---
         if (is_provisioning_mode && strncmp(event->topic, "/provision/response", event->topic_len) == 0) {
-            // ... (Tu código de parseo de provisionamiento se mantiene igual aquí) ...
-            // ... Parsear JSON, guardar token en NVS y reiniciar ...
             cJSON *json = cJSON_Parse(event->data);
             cJSON *status = cJSON_GetObjectItem(json, "status");
-             if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
+            if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
                 cJSON *creds = cJSON_GetObjectItem(json, "credentialsValue");
                 save_token_to_nvs(creds->valuestring);
-                esp_restart(); // Reinicio limpio
-             }
-             cJSON_Delete(json);
-        }
-        
-        // --- RECEPCIÓN DE ATRIBUTOS DE CONFIGURACIÓN ---
-        // Esto ocurre cuando cambias el valor en el Dashboard o al recibir la respuesta inicial
+                esp_restart(); 
+            }
+            cJSON_Delete(json);
+        } 
         else if (!is_provisioning_mode) {
             ESP_LOGI(TAG, "Datos recibidos en tópico: %.*s", event->topic_len, event->topic);
             
-            cJSON *root = cJSON_Parse(event->data);
+            // 1. CORRECCIÓN DE SEGURIDAD: Crear un buffer con terminación NULL
+            char *json_string = (char *)malloc(event->data_len + 1);
+            if (json_string == NULL) {
+                ESP_LOGE(TAG, "Fallo al asignar memoria para JSON");
+                break;
+            }
+            memcpy(json_string, event->data, event->data_len);
+            json_string[event->data_len] = '\0'; // Asegurar terminación
+
+            // 2. Parsear el string seguro
+            cJSON *root = cJSON_Parse(json_string);
             if (root) {
-                // A veces TB envía {"shared": {"intervalo_envio": 5000}} o directo {"intervalo_envio": 5000}
-                // Buscamos "intervalo_envio" directamente o dentro de "shared"
-                cJSON *intervalItem = cJSON_GetObjectItem(root, "intervalo_envio");
+                cJSON *intervalItem = NULL;
+
+                // 3. Lógica robusta: Buscar "intervalo_envio" donde sea que esté
+                // Intento A: Actualización directa (Push desde widget Shared Attribute)
+                intervalItem = cJSON_GetObjectItem(root, "intervalo_envio");
                 
+                // Intento B: Respuesta a request (dentro de "shared")
                 if (!intervalItem) {
                     cJSON *shared = cJSON_GetObjectItem(root, "shared");
-                    if (shared) intervalItem = cJSON_GetObjectItem(shared, "intervalo_envio");
+                    if (shared) {
+                        intervalItem = cJSON_GetObjectItem(shared, "intervalo_envio");
+                    }
                 }
 
-                if (cJSON_IsNumber(intervalItem)) {
+                // 4. Validar y aplicar
+                if (intervalItem && cJSON_IsNumber(intervalItem)) {
                     intervalo_envio = intervalItem->valueint;
-                    ESP_LOGW(TAG, "NUEVO CONFIG RECIBIDA: intervalo_envio = %d ms", intervalo_envio);
+                    ESP_LOGW(TAG, "--> ¡CONFIGURACIÓN ACTUALIZADA! Nuevo intervalo: %d ms", intervalo_envio);
+                    
+                    // Opcional: Forzar un envío inmediato para confirmar
+                    // xTaskNotifyGive(mi_handle_de_tarea); 
+                } else {
+                    // Log para depuración: Ver qué llegó realmente si no lo entendimos
+                    ESP_LOGD(TAG, "JSON recibido no contiene 'intervalo_envio' o formato incorrecto: %s", json_string);
                 }
                 cJSON_Delete(root);
+            } else {
+                ESP_LOGE(TAG, "Error parseando JSON");
             }
+            
+            free(json_string); // IMPORTANTE: Liberar memoria
         }
         break;
 
@@ -264,7 +279,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     }
 }
-//-------- FIN B. Actualizar mqtt_event_handler --------
+//-------- FIN 1. Código del mqtt_event_handler Actualizado --------
 
 static void mqtt_app_start(void)
 {
@@ -413,7 +428,6 @@ static void obtener_hora_sntp(void)
     }
 }
 
-//-------- C. Tarea de Envío de Telemetría (mqtts_task) --------
 void mqtts_task(void *pvParameters)
 {
     // 1. Sincronizar hora
@@ -453,7 +467,6 @@ void mqtts_task(void *pvParameters)
     
     vTaskDelete(NULL);
 }
-//-------- FIN C. Tarea de Envío de Telemetría (mqtts_task) --------
 
 void mqtts_start(void)
 {
