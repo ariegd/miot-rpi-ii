@@ -3,6 +3,15 @@
 
 #  Práctica Final RPI-II
 
+## Telemetría periódica y Atributos compartidos para configuración remota
+Resumen del Flujo
+1. Arranque: El ESP32 se conecta. Si ya tiene token, se suscribe a `v1/devices/me/attributes`.
+2. Petición Inicial: El ESP32 pregunta "¿Qué configuración tengo?". ThingsBoard responde con el valor guardado (ej. 5000).
+3. Bucle: El `while(1)` envía datos cada 5000ms.
+4. Cambio Dinámico: Tú cambias el widget en ThingsBoard a "2000".
+5. Recepción: El `mqtt_event_handler` detecta el JSON, actualiza la variable `intervalo_envio` a 2000.
+6. Efecto: El `vTaskDelay` del bucle ahora dura solo 2 segundos. ¡El dispositivo acelera el envío sin reiniciarse!
+
 ## Para lograr el provisionamiento automático (Device Provisioning) en ESP-IDF
 Esta es una implementación completa y profesional. Para lograr el provisionamiento automático (Device Provisioning) en ESP-IDF tal como lo hace el script de Python, necesitamos implementar una máquina de estados sencilla:
 1. **Estado 1 (Inicio)**: Verificar en la memoria no volátil (NVS) si ya tenemos un Token guardado.

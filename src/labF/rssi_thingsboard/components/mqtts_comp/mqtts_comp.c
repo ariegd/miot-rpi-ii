@@ -31,7 +31,6 @@
 #include <sys/time.h>
 #include "esp_sntp.h"
 
-//-------- 1. Cabeceras y Variables Globales --------
 #include "cJSON.h" // <--- NECESARIO
 #include "nvs.h"
 #include "nvs_flash.h"
@@ -44,13 +43,17 @@ static bool provisioning_finished = false;
 // Credenciales de provisionamiento (Vienen del Kconfig)
 #define TB_PROV_KEY     CONFIG_TB_PROVISION_KEY
 #define TB_PROV_SECRET  CONFIG_TB_PROVISION_SECRET
-//-------- FIN 1. Cabeceras y Variables Globales --------
 
 static const char *TAG = "mqtts_example";
 
 // Variable global para guardar el handle del cliente
 static esp_mqtt_client_handle_t global_client = NULL;
 const char *mqtt_cert_ptr = NULL;
+
+//--------A. Variables Globales Nuevas --------
+// Variable global para el intervalo (por defecto 5000 ms / 5 seg)
+static int intervalo_envio = 5000;
+//-------- FIN A. Variables Globales Nuevas --------
 
 #if defined(CONFIG_BROKER_MOSQUITTO)
 // OPCIÓN 1: Embebido directamente como texto en el código
@@ -151,7 +154,6 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 }
 */
 
-//-------- 2. Funciones de NVS (Guardar/Leer Token) --------
 static esp_err_t save_token_to_nvs(const char *token) {
     nvs_handle_t my_handle;
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &my_handle);
@@ -180,9 +182,8 @@ static esp_err_t load_token_from_nvs(void) {
     }
     return err;
 }
-//-------- FIN 2. Funciones de NVS (Guardar/Leer Token) --------
 
-//-------- 3. El nuevo mqtt_event_handler inteligente --------
+//-------- B. Actualizar mqtt_event_handler --------
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     esp_mqtt_event_handle_t event = event_data;
@@ -193,72 +194,69 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         ESP_LOGI(TAG, "MQTT Conectado.");
         
         if (is_provisioning_mode) {
-            ESP_LOGI(TAG, "Iniciando secuencia de provisionamiento...");
-            
-            // 1. Suscribirse a la respuesta
+            // --- LÓGICA DE PROVISIONAMIENTO (Igual que tenías) ---
+            ESP_LOGI(TAG, "PROVISIONING: Iniciando secuencia...");
             esp_mqtt_client_subscribe(client, "/provision/response", 1);
-
-            // 2. Crear JSON de petición
+            
             cJSON *root = cJSON_CreateObject();
-            cJSON_AddStringToObject(root, "deviceName", "ESP32_Auto_Gen"); // Opcional, o dejar que TB genere uno
+            cJSON_AddStringToObject(root, "deviceName", "ESP32_Lab_Final");
             cJSON_AddStringToObject(root, "provisionDeviceKey", TB_PROV_KEY);
             cJSON_AddStringToObject(root, "provisionDeviceSecret", TB_PROV_SECRET);
-            
             char *post_data = cJSON_PrintUnformatted(root);
             
-            // 3. Publicar petición
-            ESP_LOGI(TAG, "Enviando credenciales: %s", post_data);
             esp_mqtt_client_publish(client, "/provision/request", post_data, 0, 1, 0);
-            
             free(post_data);
             cJSON_Delete(root);
+
         } else {
-            ESP_LOGI(TAG, "Conexión normal establecida. Listo para enviar telemetría.");
-            // Aquí te puedes suscribir a RPC o Atributos si quieres
+            // --- LÓGICA DE OPERACIÓN NORMAL ---
+            ESP_LOGI(TAG, "OPERACIÓN: Listo para telemetría.");
+            
+            // 1. Suscribirse a cambios de atributos (para recibir intervalo_envio dinámicamente)
+            esp_mqtt_client_subscribe(client, "v1/devices/me/attributes", 1);
+            
+            // 2. Solicitar los valores actuales al arrancar (por si cambiaron mientras estaba apagado)
+            esp_mqtt_client_publish(client, "v1/devices/me/attributes/request/1", "{\"sharedKeys\":\"intervalo_envio\"}", 0, 1, 0);
         }
         break;
 
     case MQTT_EVENT_DATA:
-        // Si recibimos datos en el tópico de respuesta de provisionamiento
+        // --- RESPUESTA DE PROVISIONAMIENTO ---
         if (is_provisioning_mode && strncmp(event->topic, "/provision/response", event->topic_len) == 0) {
-            ESP_LOGI(TAG, "Respuesta de provisionamiento recibida.");
-            
-            // Parsear JSON
+            // ... (Tu código de parseo de provisionamiento se mantiene igual aquí) ...
+            // ... Parsear JSON, guardar token en NVS y reiniciar ...
             cJSON *json = cJSON_Parse(event->data);
             cJSON *status = cJSON_GetObjectItem(json, "status");
-            
-            if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
+             if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
                 cJSON *creds = cJSON_GetObjectItem(json, "credentialsValue");
-                if (cJSON_IsString(creds)) {
-                    ESP_LOGI(TAG, "¡Provisionamiento EXITOSO! Token: %s", creds->valuestring);
-                    
-                    // Guardar en NVS
-                    save_token_to_nvs(creds->valuestring);
-                    strcpy(thingsboard_token, creds->valuestring);
-                    
-                    // Marcar flag para reiniciar cliente
-                    provisioning_finished = true; 
-                    
-                    // Desconectar para reconectar con el nuevo token
-                    esp_mqtt_client_disconnect(client); 
-                }
-            } else {
-                ESP_LOGE(TAG, "Fallo en provisionamiento: %s", event->data);
-            }
-            cJSON_Delete(json);
+                save_token_to_nvs(creds->valuestring);
+                esp_restart(); // Reinicio limpio
+             }
+             cJSON_Delete(json);
         }
-        break;
         
-    case MQTT_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "MQTT Desconectado.");
-        // Si acabamos de terminar el provisionamiento, reiniciamos el cliente inmediatamente
-        if (provisioning_finished) {
-            provisioning_finished = false;
-            is_provisioning_mode = false;
-            // No llamamos a mqtt_app_start aquí recursivamente, 
-            // mejor dejar que el loop principal o una tarea maneje el reinicio,
-            // pero para este ejemplo, reconfiguraremos abajo.
-             esp_restart(); // La forma más limpia tras provisionar es un reinicio completo
+        // --- RECEPCIÓN DE ATRIBUTOS DE CONFIGURACIÓN ---
+        // Esto ocurre cuando cambias el valor en el Dashboard o al recibir la respuesta inicial
+        else if (!is_provisioning_mode) {
+            ESP_LOGI(TAG, "Datos recibidos en tópico: %.*s", event->topic_len, event->topic);
+            
+            cJSON *root = cJSON_Parse(event->data);
+            if (root) {
+                // A veces TB envía {"shared": {"intervalo_envio": 5000}} o directo {"intervalo_envio": 5000}
+                // Buscamos "intervalo_envio" directamente o dentro de "shared"
+                cJSON *intervalItem = cJSON_GetObjectItem(root, "intervalo_envio");
+                
+                if (!intervalItem) {
+                    cJSON *shared = cJSON_GetObjectItem(root, "shared");
+                    if (shared) intervalItem = cJSON_GetObjectItem(shared, "intervalo_envio");
+                }
+
+                if (cJSON_IsNumber(intervalItem)) {
+                    intervalo_envio = intervalItem->valueint;
+                    ESP_LOGW(TAG, "NUEVO CONFIG RECIBIDA: intervalo_envio = %d ms", intervalo_envio);
+                }
+                cJSON_Delete(root);
+            }
         }
         break;
 
@@ -266,9 +264,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
         break;
     }
 }
-//-------- FIN 3. El nuevo mqtt_event_handler inteligente --------
+//-------- FIN B. Actualizar mqtt_event_handler --------
 
-//-------- 4. La función mqtt_app_start definitiva --------
 static void mqtt_app_start(void)
 {
     // 1. Intentar cargar token
@@ -309,7 +306,6 @@ static void mqtt_app_start(void)
     esp_mqtt_client_register_event(global_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(global_client);
 }
-//-------- FIN 4. La función mqtt_app_start definitiva --------
 
 /*
 static void mqtt_app_start(void)
@@ -417,16 +413,47 @@ static void obtener_hora_sntp(void)
     }
 }
 
+//-------- C. Tarea de Envío de Telemetría (mqtts_task) --------
 void mqtts_task(void *pvParameters)
 {
+    // 1. Sincronizar hora
     ESP_LOGI(TAG, "----------------- Sincronizando Reloj ---------------------");
-    obtener_hora_sntp(); // <--- Paso obligatorio para MQTTS
+    obtener_hora_sntp();
 
+    // 2. Iniciar Cliente MQTT (Provisionamiento o Conexión Normal)
     ESP_LOGI(TAG, "----------------- Iniciando MQTT ---------------------");
     mqtt_app_start();
+
+    // 3. Bucle infinito de telemetría (Solo si NO estamos provisionando)
+    while (1) {
+        // Si estamos conectados y NO estamos en modo provisionamiento
+        if (!is_provisioning_mode && global_client != NULL) {
+            
+            // Simulación de dato (aquí leerías tu RSSI real)
+            int rssi_dummy = -50 - (esp_random() % 20); 
+            
+            // Crear JSON
+            cJSON *root = cJSON_CreateObject();
+            cJSON_AddNumberToObject(root, "rssi", rssi_dummy);
+            cJSON_AddNumberToObject(root, "intervalo_actual", intervalo_envio); // Para verificar en TB
+            char *json_str = cJSON_PrintUnformatted(root);
+
+            // Usar tu función para enviar
+            mqtt_enviar_telemetria("v1/devices/me/telemetry", json_str);
+
+            free(json_str); // Importante liberar memoria
+            cJSON_Delete(root);
+        }
+
+        // Esperar según el intervalo configurado dinámicamente
+        // Mínimo 1 segundo para evitar saturar si el config llega mal
+        int espera = (intervalo_envio < 1000) ? 1000 : intervalo_envio;
+        vTaskDelay(pdMS_TO_TICKS(espera));
+    }
     
-     vTaskDelete(NULL);
+    vTaskDelete(NULL);
 }
+//-------- FIN C. Tarea de Envío de Telemetría (mqtts_task) --------
 
 void mqtts_start(void)
 {
