@@ -160,28 +160,7 @@ void wifi_init_sta(void)
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 }
-/*
-void obtener_rssi_wifi() {
-    wifi_ap_record_t ap_info;
-    
-    // Intentamos obtener la información del AP al que estamos asociados
-    esp_err_t res = esp_wifi_sta_get_ap_info(&ap_info);
 
-    if (res == ESP_OK) {
-        // RSSI es un valor negativo (ej. -65 dBm). 
-        // Cerca de 0 es mejor señal.
-        ESP_LOGI(TAG, "---------------------------------------");
-        ESP_LOGI(TAG, "Conectado a SSID: %s", ap_info.ssid);
-        ESP_LOGI(TAG, "RSSI actual: %d dBm", ap_info.rssi);
-        ESP_LOGI(TAG, "Dirección MAC del router: %d", ap_info.bssid);
-        ESP_LOGI(TAG, "Canal de transmisión: %d", ap_info.primary);
-        
-        // Aquí podrías serializar ap_info.rssi a JSON o CBOR para ThingsBoard
-    } else {
-        ESP_LOGE(TAG, "Error al obtener info del AP. ¿Está el WiFi conectado?");
-    }
-}
-*/
 void obtener_rssi_wifi() {
     wifi_ap_record_t ap_info;
     esp_err_t res = esp_wifi_sta_get_ap_info(&ap_info);

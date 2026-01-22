@@ -3,20 +3,67 @@
 
 #  Práctica Final RPI-II
 
+## Comparar gráficamente tus cuatro nodos (el ESP32-C3, el ESP32-C6 y los otros dos que añadas mediante la MAC única)
+En un solo widget de ThingsBoard, debes utilizar un `Timeseries Line Chart` configurado con múltiples fuentes de datos.
+### Paso 1. Preparar los Alias de Entidad
+Para que un solo gráfico entienda que debe buscar datos de distintos dispositivos, primero debemos "agruparlos" mediante un alias:
+1. En tu Dashboard (`tab_airus`), entra en Modo de edición.
+2. Haz clic en el icono de Entity Aliases (el icono de filtro/lista en la barra superior).
+3. Puedes hacerlo de dos formas:
+  - **Alias Individuales**: Crea uno para cada nodo (ej. Nodo_C3, Nodo_C6).
+  - **Alias de Filtro**: Crea uno llamado `Mis_Nodos`, selecciona el tipo "Entity List" y busca manualmente los nombres de tus 4 dispositivos (los que tienen el formato `ESP32_XXXXXX`). 
+### Paso 2. Configurar el Widget de Comparación
+1. Haz clic en Añadir nuevo `widget > Paquete Charts > Timeseries Line Chart`.
+2. En la pestaña Data (Datos), añade una nueva serie por cada nodo:
+ - **Datasource 1**: Selecciona el alias del primer dispositivo y en Data Key elige rssi.
+ - **Datasource 2**: Selecciona el alias del segundo dispositivo y elige la misma clave rssi.
+
+## ThingsBoard guarda automáticamente todo el historial de los datos que envías como telemetría.
+Cómo ver el historial en la plataforma. Desde la pestaña "Última telemetría"
+1. Ve a Entidades > Dispositivos.
+2. Haz clic en tu dispositivo (ej. ESP32_Auto_Gen o el nombre con MAC que creamos).
+3. Selecciona la pestaña Última telemetría.
+4. Ahí verás una lista con rssi e `intervalo_actual`. Si haces clic en el icono de "Historial" (parece un pequeño gráfico) al lado del valor, podrás ver una tabla con todos los datos pasados.
+
+## Borrado los dispositivos en demo.thingsboard.io
+El error `Connection refused, not authorized` ocurre porque has borrado los dispositivos en la plataforma, pero tus ESP32 todavía tienen guardados los Tokens antiguos en su memoria interna (NVS).
+* Al intentar conectar con un Token que ya no existe en el servidor, ThingsBoard rechaza la conexión inmediatamente.
+* **Solución**: Limpiar la memoria NVS (Obligatorio): 
+- Vía comandos (Recomendado): Ejecuta en tu terminal para cada dispositivo: `idf.py -p PUERTO erase-flash`
+
+## Problema en una colisión de identidad causada por el código fuente en mqtts_comp.c.
+El primero (C3) "ganó" el nombre ESP32_Auto_Gen. ThingsBoard permite el provisionamiento, pero si la política es "permitir crear nuevos dispositivos", el segundo falla al intentar reclamar un nombre que ya está en uso y conectado. Con el cambio de la MAC, cada nodo tendrá su propia identidad única automáticamente.
+
 ## Como asegurar que el ESP32 capture correctamente los cambios realizados desde el widget de Update Multiple Attributes en ThingsBoard
 ### Paso 1. Cambiar el Ámbito (Scope) en el Widget
 Basado en tu imagen, sigue esta ruta:
 1. En la pestaña Datos, haz clic en el icono del lápiz (editar) que aparece al lado de la clave `intervalo_envio`.
 2. Se abrirá una ventana emergente llamada "Configuración de la clave de datos".
 3. Busca la sección Configuración del widget o Ajustes avanzados.
-4. Allí encontrarás el menú desplegable Attribute scope (Ámbito del atributo). Cámbialo de "Server Attribute" a "Shared Attribute".
+4. Allí encontrarás el menú desplegable `Attribute scope` (Ámbito del atributo). Cámbialo de "Server Attribute" a "Shared Attribute".
 5. Haz clic en Aplicar y luego en Guardar en el tablero principal.
+```
+Dispositivos
+Atributos->Atributos del clientes-Atributos Compartidos->
+
+Cards
+Update Multiple Attributes-> Editar intervalo_envio->Avanzado-> Atributo Compartido-Entero-> + ->intervalo_envio
+```
 
 ### Paso 2. Por qué es obligatorio usar "Shared Attribute"
 El código de tu ESP32 está suscrito al tópico `v1/devices/me/attributes`. En el ecosistema de ThingsBoard:
 * **Server Attributes**: Son privados para el servidor. El ESP32 no recibe notificaciones cuando cambian.
-* **Shared Attributes**: Están diseñados para ser compartidos con el dispositivo. Cualquier cambio en estos activará un mensaje MQTT que tu mqtt_event_handler podrá capturar.
+* **Shared Attributes**: Están diseñados para ser compartidos con el dispositivo. Cualquier cambio en estos activará un mensaje MQTT que tu `mqtt_event_handler` podrá capturar.
+* Configuración en el Panel de ThingsBoard. Para que esto funcione, debes configurar el dashboard para enviar el atributo:
 
+1. Entra a tu Dispositivo: Ve a la pestaña Attributes (Atributos) y selecciona Shared Attributes (Atributos compartidos).
+2. Crear el Atributo: Añade un nuevo atributo llamado `intervalo_envio` (Integer) con valor `10000` (10 segundos).
+3. Crear Widget en Dashboard:
+ - Crea un nuevo Dashboard.
+ - Añade un widget de tipo "Input" o "Knob Control" (Control de perilla).
+ - En "Datasource", selecciona tu dispositivo.
+
+En "Datakey", selecciona el atributo intervalo_envio (asegúrate de marcarlo como "Shared Attribute", no Telemetry).
 
 ## ¿Por qué no se actualizaba antes?
 Existen tres razones comunes basadas en tu log y el código previo:

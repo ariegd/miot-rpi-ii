@@ -1,7 +1,7 @@
 menu "MQTTS Configuration"
 
    choice BROKER_SELECTION
-        prompt "Seleccionar destino del Broker MQTT"
+        prompt "Select MQTT Broker Destination"
         default BROKER_THINGSBOARD
         help
             Elija el servidor preconfigurado o una dirección personalizada. 

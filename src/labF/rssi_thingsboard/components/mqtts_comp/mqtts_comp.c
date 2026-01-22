@@ -1,12 +1,3 @@
-/* MQTT over SSL Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -17,13 +8,12 @@
 #include "esp_netif.h"
 #include "protocol_examples_common.h"
 
-#include "certs.h"
 #include "esp_log.h"
 #include "mqtt_client.h"
 #include "esp_tls.h"
 #include "esp_ota_ops.h"
 #include <sys/param.h>
-
+#include "esp_mac.h"
 #include "sdkconfig.h"
 
 // Para el  actualizar el tiempo
@@ -38,7 +28,6 @@
 // Variables para manejar el estado
 static char thingsboard_token[128] = {0};
 static bool is_provisioning_mode = false;
-static bool provisioning_finished = false;
 
 // Credenciales de provisionamiento (Vienen del Kconfig)
 #define TB_PROV_KEY     CONFIG_TB_PROVISION_KEY
@@ -48,109 +37,9 @@ static const char *TAG = "mqtts_example";
 
 // Variable global para guardar el handle del cliente
 static esp_mqtt_client_handle_t global_client = NULL;
-const char *mqtt_cert_ptr = NULL;
 
 // Variable global para el intervalo (por defecto 5000 ms / 5 seg)
 static int intervalo_envio = 5000;
-
-#if defined(CONFIG_BROKER_MOSQUITTO)
-// OPCIÓN 1: Embebido directamente como texto en el código
-#elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
-static const uint8_t mqtt_custom_pem_start[]  = "-----BEGIN CERTIFICATE-----\n" CONFIG_BROKER_CERTIFICATE_OVERRIDE "\n-----END 
-#else
-extern const uint8_t mqtt_eclipseprojects_io_pem_start[]   asm("_binary_mqtt_eclipseprojects_io_pem_start");
-extern const uint8_t mqtt_eclipseprojects_io_pem_end[]   asm("_binary_mqtt_eclipseprojects_io_pem_end");
-#endif
-
-//
-// Note: this function is for testing purposes only publishing part of the active partition
-//       (to be checked against the original binary)
-//
-static void send_binary(esp_mqtt_client_handle_t client)
-{
-    esp_partition_mmap_handle_t out_handle;
-    const void *binary_address;
-    const esp_partition_t *partition = esp_ota_get_running_partition();
-    esp_partition_mmap(partition, 0, partition->size, ESP_PARTITION_MMAP_DATA, &binary_address, &out_handle);
-    // sending only the configured portion of the partition (if it's less than the partition size)
-    int binary_size = MIN(CONFIG_BROKER_BIN_SIZE_TO_SEND, partition->size);
-    int msg_id = esp_mqtt_client_publish(client, "/topic/binary", binary_address, binary_size, 0, 0);
-    ESP_LOGI(TAG, "binary sent with msg_id=%d", msg_id);
-}
-
-/*
- * @brief Event handler registered to receive MQTT events
- *
- *  This function is called by the MQTT client event loop.
- *
- * @param handler_args user data registered to the event.
- * @param base Event base for the handler(always MQTT Base in this example).
- * @param event_id The id for the received event.
- * @param event_data The data for the event, esp_mqtt_event_handle_t.
- */
- /*
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
-{
-    ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%" PRIi32, base, event_id);
-    esp_mqtt_event_handle_t event = event_data;
-    esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
-    switch ((esp_mqtt_event_id_t)event_id) {
-    case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        //ThingsBoard no reconoce estos tópicos y desconecta al cliente al recibirlos.
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_subscribe(client, "/topic/qos1", 1);
-        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-
-        msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-        ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
-        break;
-    case MQTT_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-        break;
-
-    case MQTT_EVENT_SUBSCRIBED:
-        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos0", "data", 0, 0, 0);
-        ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-        break;
-    case MQTT_EVENT_UNSUBSCRIBED:
-        ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event->msg_id);
-        break;
-    case MQTT_EVENT_PUBLISHED:
-        ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
-        break;
-    case MQTT_EVENT_DATA:
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
-        printf("DATA=%.*s\r\n", event->data_len, event->data);
-        if (strncmp(event->data, "send binary please", event->data_len) == 0) {
-            ESP_LOGI(TAG, "Sending the binary");
-            send_binary(client);
-        }
-        break;
-    case MQTT_EVENT_ERROR:
-        ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
-            ESP_LOGI(TAG, "Last error code reported from esp-tls: 0x%x", event->error_handle->esp_tls_last_esp_err);
-            ESP_LOGI(TAG, "Last tls stack error number: 0x%x", event->error_handle->esp_tls_stack_err);
-            ESP_LOGI(TAG, "Last captured errno : %d (%s)",  event->error_handle->esp_transport_sock_errno,
-                     strerror(event->error_handle->esp_transport_sock_errno));
-        } else if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
-            ESP_LOGI(TAG, "Connection refused error: 0x%x", event->error_handle->connect_return_code);
-        } else {
-            ESP_LOGW(TAG, "Unknown error type: 0x%x", event->error_handle->error_type);
-        }
-        break;
-    default:
-        ESP_LOGI(TAG, "Other event id:%d", event->event_id);
-        break;
-    }
-}
-*/
 
 static esp_err_t save_token_to_nvs(const char *token) {
     nvs_handle_t my_handle;
@@ -181,105 +70,108 @@ static esp_err_t load_token_from_nvs(void) {
     return err;
 }
 
-//-------- 1. Código del mqtt_event_handler Actualizado --------
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     esp_mqtt_event_handle_t event = event_data;
     esp_mqtt_client_handle_t client = event->client;
 
     switch ((esp_mqtt_event_id_t)event_id) {
-    case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT Conectado.");
-        
-        if (is_provisioning_mode) {
-            ESP_LOGI(TAG, "PROVISIONING: Iniciando secuencia...");
-            esp_mqtt_client_subscribe(client, "/provision/response", 1);
+        case MQTT_EVENT_CONNECTED:
+            ESP_LOGI(TAG, "MQTT Conectado.");
             
-            cJSON *root = cJSON_CreateObject();
-            cJSON_AddStringToObject(root, "deviceName", "ESP32_Auto_Gen");
-            cJSON_AddStringToObject(root, "provisionDeviceKey", TB_PROV_KEY);
-            cJSON_AddStringToObject(root, "provisionDeviceSecret", TB_PROV_SECRET);
-            char *post_data = cJSON_PrintUnformatted(root);
-            
-            esp_mqtt_client_publish(client, "/provision/request", post_data, 0, 1, 0);
-            free(post_data);
-            cJSON_Delete(root);
-        } else {
-            ESP_LOGI(TAG, "OPERACIÓN: Listo para telemetría.");
-            
-            // SUSCRIPCIÓN CRÍTICA: Para recibir cambios del Dashboard en tiempo real
-            esp_mqtt_client_subscribe(client, "v1/devices/me/attributes", 1);
-            
-            // SOLICITUD INICIAL: Para leer el valor actual al arrancar
-            esp_mqtt_client_publish(client, "v1/devices/me/attributes/request/1", "{\"sharedKeys\":\"intervalo_envio\"}", 0, 1, 0);
-        }
-        break;
-
-    case MQTT_EVENT_DATA:
-        if (is_provisioning_mode && strncmp(event->topic, "/provision/response", event->topic_len) == 0) {
-            cJSON *json = cJSON_Parse(event->data);
-            cJSON *status = cJSON_GetObjectItem(json, "status");
-            if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
-                cJSON *creds = cJSON_GetObjectItem(json, "credentialsValue");
-                save_token_to_nvs(creds->valuestring);
-                esp_restart(); 
-            }
-            cJSON_Delete(json);
-        } 
-        else if (!is_provisioning_mode) {
-            ESP_LOGI(TAG, "Datos recibidos en tópico: %.*s", event->topic_len, event->topic);
-            
-            // 1. CORRECCIÓN DE SEGURIDAD: Crear un buffer con terminación NULL
-            char *json_string = (char *)malloc(event->data_len + 1);
-            if (json_string == NULL) {
-                ESP_LOGE(TAG, "Fallo al asignar memoria para JSON");
-                break;
-            }
-            memcpy(json_string, event->data, event->data_len);
-            json_string[event->data_len] = '\0'; // Asegurar terminación
-
-            // 2. Parsear el string seguro
-            cJSON *root = cJSON_Parse(json_string);
-            if (root) {
-                cJSON *intervalItem = NULL;
-
-                // 3. Lógica robusta: Buscar "intervalo_envio" donde sea que esté
-                // Intento A: Actualización directa (Push desde widget Shared Attribute)
-                intervalItem = cJSON_GetObjectItem(root, "intervalo_envio");
+            if (is_provisioning_mode) {
+                ESP_LOGI(TAG, "PROVISIONING: Iniciando secuencia...");
+                esp_mqtt_client_subscribe(client, "/provision/response", 1);
                 
-                // Intento B: Respuesta a request (dentro de "shared")
-                if (!intervalItem) {
-                    cJSON *shared = cJSON_GetObjectItem(root, "shared");
-                    if (shared) {
-                        intervalItem = cJSON_GetObjectItem(shared, "intervalo_envio");
-                    }
-                }
-
-                // 4. Validar y aplicar
-                if (intervalItem && cJSON_IsNumber(intervalItem)) {
-                    intervalo_envio = intervalItem->valueint;
-                    ESP_LOGW(TAG, "--> ¡CONFIGURACIÓN ACTUALIZADA! Nuevo intervalo: %d ms", intervalo_envio);
-                    
-                    // Opcional: Forzar un envío inmediato para confirmar
-                    // xTaskNotifyGive(mi_handle_de_tarea); 
-                } else {
-                    // Log para depuración: Ver qué llegó realmente si no lo entendimos
-                    ESP_LOGD(TAG, "JSON recibido no contiene 'intervalo_envio' o formato incorrecto: %s", json_string);
-                }
+                // --- CAMBIO: GENERAR NOMBRE BASADO EN MAC ---
+                uint8_t mac[6] = {0};
+                esp_efuse_mac_get_default(mac); // Obtiene la MAC base del chip
+                char dynamic_name[32];
+                sprintf(dynamic_name, "ESP32_%02X%02X%02X", mac[3], mac[4], mac[5]); // Ej: ESP32_A1B2C3
+                // --------------------------------------------
+                
+                cJSON *root = cJSON_CreateObject();
+                cJSON_AddStringToObject(root, "deviceName", dynamic_name);
+                cJSON_AddStringToObject(root, "provisionDeviceKey", TB_PROV_KEY);
+                cJSON_AddStringToObject(root, "provisionDeviceSecret", TB_PROV_SECRET);
+                char *post_data = cJSON_PrintUnformatted(root);
+                
+                esp_mqtt_client_publish(client, "/provision/request", post_data, 0, 1, 0);
+                free(post_data);
                 cJSON_Delete(root);
             } else {
-                ESP_LOGE(TAG, "Error parseando JSON");
+                ESP_LOGI(TAG, "OPERACIÓN: Listo para telemetría.");
+                // SUSCRIPCIÓN CRÍTICA: Para recibir cambios del Dashboard en tiempo real
+                esp_mqtt_client_subscribe(client, "v1/devices/me/attributes", 1);
+                // SOLICITUD INICIAL: Para leer el valor actual al arrancar
+                esp_mqtt_client_publish(client, "v1/devices/me/attributes/request/1", "{\"sharedKeys\":\"intervalo_envio\"}", 0, 1, 0);
             }
-            
-            free(json_string); // IMPORTANTE: Liberar memoria
-        }
-        break;
+            break;
 
-    default:
-        break;
+        case MQTT_EVENT_DATA:
+            if (is_provisioning_mode && strncmp(event->topic, "/provision/response", event->topic_len) == 0) {
+                cJSON *json = cJSON_Parse(event->data);
+                cJSON *status = cJSON_GetObjectItem(json, "status");
+                if (cJSON_IsString(status) && (strcmp(status->valuestring, "SUCCESS") == 0)) {
+                    cJSON *creds = cJSON_GetObjectItem(json, "credentialsValue");
+                    save_token_to_nvs(creds->valuestring);
+                    esp_restart(); 
+                }
+                cJSON_Delete(json);
+            } 
+            else if (!is_provisioning_mode) {
+                ESP_LOGI(TAG, "Datos recibidos en tópico: %.*s", event->topic_len, event->topic);
+                
+                // 1. CORRECCIÓN DE SEGURIDAD: Crear un buffer con terminación NULL
+                char *json_string = (char *)malloc(event->data_len + 1);
+                if (json_string == NULL) {
+                    ESP_LOGE(TAG, "Fallo al asignar memoria para JSON");
+                    break;
+                }
+                memcpy(json_string, event->data, event->data_len);
+                json_string[event->data_len] = '\0'; // Asegurar terminación
+
+                // 2. Parsear el string seguro
+                cJSON *root = cJSON_Parse(json_string);
+                if (root) {
+                    cJSON *intervalItem = NULL;
+
+                    // 3. Lógica robusta: Buscar "intervalo_envio" donde sea que esté
+                    // Intento A: Actualización directa (Push desde widget Shared Attribute)
+                    intervalItem = cJSON_GetObjectItem(root, "intervalo_envio");
+                    
+                    // Intento B: Respuesta a request (dentro de "shared")
+                    if (!intervalItem) {
+                        cJSON *shared = cJSON_GetObjectItem(root, "shared");
+                        if (shared) {
+                            intervalItem = cJSON_GetObjectItem(shared, "intervalo_envio");
+                        }
+                    }
+
+                    // 4. Validar y aplicar
+                    if (intervalItem && cJSON_IsNumber(intervalItem)) {
+                        intervalo_envio = intervalItem->valueint;
+                        ESP_LOGW(TAG, "--> ¡CONFIGURACIÓN ACTUALIZADA! Nuevo intervalo: %d ms", intervalo_envio);
+                        
+                        // Opcional: Forzar un envío inmediato para confirmar
+                        // xTaskNotifyGive(mi_handle_de_tarea); 
+                    } else {
+                        // Log para depuración: Ver qué llegó realmente si no lo entendimos
+                        ESP_LOGD(TAG, "JSON recibido no contiene 'intervalo_envio' o formato incorrecto: %s", json_string);
+                    }
+                    cJSON_Delete(root);
+                } else {
+                    ESP_LOGE(TAG, "Error parseando JSON");
+                }
+                
+                free(json_string); // IMPORTANTE: Liberar memoria
+            }
+            break;
+
+        default:
+            break;
     }
 }
-//-------- FIN 1. Código del mqtt_event_handler Actualizado --------
 
 static void mqtt_app_start(void)
 {
@@ -302,9 +194,6 @@ static void mqtt_app_start(void)
         username_to_use = thingsboard_token; // Usamos el token guardado
     }
 
-    // Usamos el certificado de ThingsBoard definido en certs.c
-    mqtt_cert_ptr = mqtt_cert_thingsboard_ptr;
-
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = uri_to_use,
@@ -320,63 +209,6 @@ static void mqtt_app_start(void)
     global_client = esp_mqtt_client_init(&mqtt_cfg);
     esp_mqtt_client_register_event(global_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
     esp_mqtt_client_start(global_client);
-}
-
-/*
-static void mqtt_app_start(void)
-{
-// ASIGNACIÓN EN TIEMPO DE EJECUCIÓN:
-    #if defined(CONFIG_BROKER_MOSQUITTO)
-        mqtt_cert_ptr = mqtt_cert_mosquitto_ptr; // Esto ahora es legal y funciona
-    #elif defined(CONFIG_BROKER_THINGSBOARD)
-        mqtt_cert_ptr = mqtt_cert_thingsboard_ptr;
-    #elif CONFIG_BROKER_CERTIFICATE_OVERRIDDEN == 1
-        mqtt_cert_ptr = (const char *)mqtt_custom_pem_start;
-    #else
-        mqtt_cert_ptr = (const char *)mqtt_eclipseprojects_io_pem_start;
-    #endif
-
-    const esp_mqtt_client_config_t mqtt_cfg = {
-        .broker = {
-    #if defined(CONFIG_BROKER_MOSQUITTO)
-            .address.uri = "mqtts://test.mosquitto.org:8883",// Esto ahora es legal y funciona
-    #elif defined(CONFIG_BROKER_THINGSBOARD)
-            .address.uri ="mqtts://demo.thingsboard.io:8883",
-    #else
-            .address.uri = CONFIG_BROKER_URI,
-    #endif
-            .verification.skip_cert_common_name_check = true,             //<--es probable que el nombre del host no coincida.
-            .verification.certificate = mqtt_cert_ptr
-        },
-    #if defined(CONFIG_BROKER_THINGSBOARD)
-        .credentials = {
-              //.username = CONFIG_THINGSBOARD_ACCESS_TOKEN, // <--- OBLIGATORIO
-              .username = "odpvh2wr539x57lmevg7", // El token de tu imagen
-          },
-    #endif
-        .network.timeout_ms = 10000, // <-- redes ruidosas
-    };
-
-    ESP_LOGI(TAG, "[APP] Free memory: %" PRIu32 " bytes", esp_get_free_heap_size());
-    //esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    // esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
-    // esp_mqtt_client_start(client);
-    
-    global_client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_register_event(global_client, ESP_EVENT_ANY_ID, mqtt_event_handler, NULL);
-    esp_mqtt_client_start(global_client);
-}
-*/
-
-// Esta es la función que correrá en paralelo
-void mqtt_fix_task(void* pvParameters) {
-    ESP_LOGI("FIX", "Esperando a que el servidor local esté accesible...");
-    vTaskDelay(pdMS_TO_TICKS(5000)); 
-    
-    ESP_LOGI("FIX", "Iniciando conexión MQTT Local sobre SSL...");
-    mqtt_app_start();
-    
-    vTaskDelete(NULL);
 }
 
 // NUEVA FUNCIÓN: Para que el WiFi la llame
