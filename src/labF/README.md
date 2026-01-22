@@ -7,8 +7,8 @@ Máster IoT, curso 25-26
  	└── Autor
  		    └── Ariel Gámez <arielg01@ucm.es>
 ```
-[repositorio](https://github.com/ariegd/miot-aniot/tree/labF/src/labF) en GitHub
-[video](https://youtu.be/agf_GGZS18o)
+[repositorio](https://github.com/ariegd/miot-rpi-ii/tree/labF/src/labF) en GitHub
+[video](https://youtu.be/IxZo4qbLnYY) en Youtube
 
 ## Objetivos
 ```
@@ -24,9 +24,29 @@ Máster IoT, curso 25-26
 ## Directorio del proyecto
 A continuación se muestra una explicación de los archivos en la carpeta del proyecto.
 ```
-├── gattc_wifih
-├── gatts_tourch
-├── server
-├── wifir_coapc
-└── README.md                  
+├── CMakeLists.txt
+├── components
+│   ├── mqtts_comp                          <-- componente
+│   │   ├── CMakeLists.txt
+│   │   ├── idf_component.yml
+│   │   ├── include
+│   │   │   └── mqtts_comp.h
+│   │   ├── Kconfig.projbuild
+│   │   └── mqtts_comp.c
+│   └── rssi_wifi_comp                   <-- componente
+│       ├── CMakeLists.txt
+│       ├── include
+│       │   └── rssi_wifi_comp.h
+│       ├── Kconfig.projbuild
+│       └── rssi_wifi_comp.c
+├── dependencies.lock
+├── main
+│   ├── CMakeLists.txt
+│   ├── idf_component.yml
+│   └── rssi_thingsboard.c
+├── pytest_hello_world.py
+├── README.md
+├── sdkconfig
+├── sdkconfig.ci
+└── sdkconfig.old
 ```

@@ -3,6 +3,16 @@
 
 #  Práctica Final RPI-II
 
+## Para cumplir con los dos nuevos requisitos (Telemetría periódica y Atributos compartidos para configuración remota)
+Si no ves la palabra "Grouping" directamente en la configuración de la clave de datos, es porque en esta versión la agregación se define en la Ventana de Tiempo (Time Window) del widget o del tablero completo.
+
+Sigue estos pasos para activar la media (promedio) en tu gráfico: Configuración desde la Ventana de Tiempo
+1. Haz clic en el icono del reloj (Tiempo real) en la esquina superior derecha de tu widget o del tablero tab_airus.
+2. Asegúrate de que la pestaña seleccionada sea Tiempo real.
+3. Busca el desplegable que dice Función de agregación (suele estar justo debajo del intervalo de tiempo).
+4. Selecciona Promedio (o Average).
+5. En Intervalo de agregación, define cada cuánto tiempo quieres que se calcule ese promedio (ej. cada 10 segundos).
+
 ## Comparar gráficamente tus cuatro nodos (el ESP32-C3, el ESP32-C6 y los otros dos que añadas mediante la MAC única)
 En un solo widget de ThingsBoard, debes utilizar un `Timeseries Line Chart` configurado con múltiples fuentes de datos.
 ### Paso 1. Preparar los Alias de Entidad
