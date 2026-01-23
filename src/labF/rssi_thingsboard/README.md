@@ -3,6 +3,25 @@
 
 #  Práctica Final RPI-II
 
+## Error limpiar los nodos en el ThingsBoard
+Para volver aprovisionar
+```
+I (28539) mqtts_example: Hora sincronizada correctamente: Fri Jan 23 22:19:32 2026
+I (28539) mqtts_example: ----------------- Iniciando MQTT ---------------------
+W (28539) mqtts_example: MODO: PROVISIONAMIENTO AUTOMÁTICO
+I (29079) mqtts_example: MQTT Conectado.
+I (29079) mqtts_example: PROVISIONING: Iniciando secuencia...
+E (89499) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read(): EOF
+E (89499) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read() error: errno=128
+E (89509) mqtt_client: mqtt_process_receive: mqtt_message_receive() returned -2
+I (105059) mqtts_example: MQTT Conectado.
+I (105059) mqtts_example: PROVISIONING: Iniciando secuencia...
+E (165689) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read(): EOF
+E (165689) mqtt_client: esp_mqtt_handle_transport_read_error: transport_read() error: errno=128
+E (165689) mqtt_client: mqtt_process_receive: mqtt_message_receive() returned -2
+I (181249) mqtts_example: MQTT Conectado.
+```
+
 ## Para cumplir con los dos nuevos requisitos (Telemetría periódica y Atributos compartidos para configuración remota)
 Si no ves la palabra "Grouping" directamente en la configuración de la clave de datos, es porque en esta versión la agregación se define en la Ventana de Tiempo (Time Window) del widget o del tablero completo.
 
