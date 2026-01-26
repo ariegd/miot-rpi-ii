@@ -25,6 +25,8 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
+#include "esp_crt_bundle.h" // <--- IMPORTANTE: Necesario para esp_crt_bundle_attach
+
 // Variables para manejar el estado
 static char thingsboard_token[128] = {0};
 static bool is_provisioning_mode = false;
@@ -184,7 +186,8 @@ static void mqtt_app_start(void)
 
     const char *username_to_use;
     //const char *uri_to_use = "mqtts://demo.thingsboard.io:8883";
-    const char *uri_to_use = "mqtt://demo.thingsboard.io:1883";
+    //const char *uri_to_use = "mqtt://demo.thingsboard.io:1883";
+    const char *uri_to_use = "mqtts://mqtt.eu.thingsboard.cloud:8883";
 
     if (is_provisioning_mode) {
         ESP_LOGW(TAG, "MODO: PROVISIONAMIENTO AUTOMÁTICO");
@@ -197,8 +200,10 @@ static void mqtt_app_start(void)
     const esp_mqtt_client_config_t mqtt_cfg = {
         .broker = {
             .address.uri = uri_to_use,
+            .address.hostname = "mqtt.eu.thingsboard.cloud",
             // CAMBIO 2: Eliminar o comentar la parte del certificado
             //.verification.certificate = mqtt_cert_ptr,
+            .verification.crt_bundle_attach = esp_crt_bundle_attach,
             .verification.skip_cert_common_name_check = true,
         },
         .credentials = {

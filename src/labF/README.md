@@ -20,7 +20,6 @@ Máster IoT, curso 25-26
 ■  Representar la estadística de un conjunto de 4 nodos a lo largo del tiempo.
 ```
 
-
 ## Directorio del proyecto
 A continuación se muestra una explicación de los archivos en la carpeta del proyecto.
 ```
@@ -50,3 +49,6 @@ A continuación se muestra una explicación de los archivos en la carpeta del pr
 ├── sdkconfig.ci
 └── sdkconfig.old
 ```
+
+## Problemas encontrados
+ * [hilo de resolución](https://github.com/ariegd/miot-rpi-ii/blob/labF/src/labF/rssi_thingsboard/README.md)

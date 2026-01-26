@@ -10,7 +10,7 @@ menu "MQTTS Configuration"
             bool "Mosquitto Test (test.mosquitto.org)"
 
         config BROKER_THINGSBOARD
-            bool "ThingsBoard Demo (demo.thingsboard.io)"
+            bool "ThingsBoard Demo (eu.thingsboard.cloud)"
 
         config BROKER_CUSTOM_IP
             bool "Dirección IP Local / Personalizada"

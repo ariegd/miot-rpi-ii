@@ -3,6 +3,32 @@
 
 #  Práctica Final RPI-II
 
+## Error: app partition is too small
+* El error `Error: app partition is too small` indica que el binario compilado (0x103530 bytes) es ligeramente más grande que el espacio asignado en la tabla de particiones por defecto para la aplicación (0x100000 bytes o 1 MB). Esto es común al habilitar SSL/TLS y usar librerías como cJSON, ya que aumentan el tamaño del firmware.
+
+* Crea un archivo llamado `partitions.csv` en la raíz de tu proyecto.
+
+## Conectarse a eu.thingsboard.cloud
+¡Excelente cambio de rumbo! Conectarse a eu.thingsboard.cloud es una decisión inteligente, ya que la instancia Cloud suele ser más estable que la de demo. Ahora si funciona el MQTTS.
+```
+const esp_mqtt_client_config_t mqtt_cfg = {
+    // CAMBIO: Apuntar a la instancia Cloud de EU
+    .broker.address.uri = "mqtts://mqtt.eu.thingsboard.cloud:8883", 
+    .broker.address.hostname = "mqtt.eu.thingsboard.cloud",
+    
+    // El bundle automático suele funcionar bien con ThingsBoard Cloud
+    .broker.verification.crt_bundle_attach = esp_crt_bundle_attach,
+    
+    // Credenciales del nuevo dispositivo en eu.thingsboard.cloud
+    .credentials.client_id = "esp32_tb_node_01",
+    .credentials.username = "4q52trlilp9caup5tnh7",
+    .credentials.authentication.password = "",
+    
+    .buffer.size = 2048,
+    .buffer.out_size = 2048
+};
+```
+
 ## Error limpiar los nodos en el ThingsBoard
 Para volver aprovisionar
 ```
