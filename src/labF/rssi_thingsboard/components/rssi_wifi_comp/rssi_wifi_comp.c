@@ -161,62 +161,19 @@ void wifi_init_sta(void)
     }
 }
 
-void obtener_rssi_wifi() {
-    wifi_ap_record_t ap_info;
-    esp_err_t res = esp_wifi_sta_get_ap_info(&ap_info);
-
-    if (res == ESP_OK) {
-        char *serialized_output = NULL;
-
-        #if defined(CONFIG_SERIALIZE_JSON)
-            cJSON *root = cJSON_CreateObject();
-            cJSON_AddNumberToObject(root, "rssi", ap_info.rssi);
-            cJSON_AddStringToObject(root, "status", "online");
-            serialized_output = cJSON_PrintUnformatted(root);
-            cJSON_Delete(root);
-            ESP_LOGI(TAG, "Formato JSON generado: %s", serialized_output);
-
-        #elif defined(CONFIG_SERIALIZE_CBOR)
-            // Aquí iría la lógica de tinycbor
-            ESP_LOGI(TAG, "Formato seleccionado: CBOR (requiere implementación)");
-            serialized_output = strdup("Binario CBOR");
-
-        #elif defined(CONFIG_SERIALIZE_PBUF)
-            // Aquí iría la lógica de Protobuf
-            ESP_LOGI(TAG, "Formato seleccionado: PBUF (requiere implementación)");
-            serialized_output = strdup("Binario PBUF");
-        #endif
-
-        if (serialized_output) {
-            // Aquí enviarías 'serialized_output' por MQTT
-            ESP_LOGI(TAG, "Datos serializados: %s", serialized_output);
-            // "/topic/qos0"
-            mqtt_enviar_telemetria("v1/devices/me/telemetry", serialized_output);
-            free(serialized_output);
-        }
-    }
-}
-
+// ELIMINAR TODA LA FUNCIÓN obtener_rssi_wifi()
 
 void rssi_wifi_task(void *pvParameters)
 {
-    //Initialize NVS
-    /*
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
-
-    if (CONFIG_LOG_MAXIMUM_LEVEL > CONFIG_LOG_DEFAULT_LEVEL) {
-        esp_log_level_set("wifi", CONFIG_LOG_MAXIMUM_LEVEL);
-    }
-    */
-
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_STA");
+    ESP_LOGI(TAG, "Iniciando WiFi en modo Station...");
+    
+    // Configura e intenta la conexión
     wifi_init_sta();
-    obtener_rssi_wifi();
+
+    // Ya no llamamos a obtener_rssi_wifi() aquí.
+    // La tarea de WiFi puede terminar o quedarse esperando eventos de reconexión.
+    ESP_LOGI(TAG, "WiFi establecido. La telemetría será manejada por mqtts_task.");
+    
     // SOLUCIÓN: Matar la tarea al finalizar la configuración
     vTaskDelete(NULL);
 }

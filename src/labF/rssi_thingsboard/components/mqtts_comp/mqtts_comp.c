@@ -282,12 +282,24 @@ void mqtts_task(void *pvParameters)
         // Si estamos conectados y NO estamos en modo provisionamiento
         if (!is_provisioning_mode && global_client != NULL) {
             
+            // --- OBTENER RSSI REAL ---
+            wifi_ap_record_t ap_info;
+            int rssi_actual = 0;
+            
+            // Intentamos obtener la info del Punto de Acceso actual
+            if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+                rssi_actual = ap_info.rssi; // Valor real en dBm
+            } else {
+                ESP_LOGW(TAG, "No se pudo obtener el RSSI (¿WiFi desconectado?)");
+                rssi_actual = -50 - (esp_random() % 20); 
+            }
+            
             // Simulación de dato (aquí leerías tu RSSI real)
-            int rssi_dummy = -50 - (esp_random() % 20); 
+            // int rssi_dummy = -50 - (esp_random() % 20); 
             
             // Crear JSON
             cJSON *root = cJSON_CreateObject();
-            cJSON_AddNumberToObject(root, "rssi", rssi_dummy);
+            cJSON_AddNumberToObject(root, "rssi", rssi_actual);
             cJSON_AddNumberToObject(root, "intervalo_actual", intervalo_envio); // Para verificar en TB
             char *json_str = cJSON_PrintUnformatted(root);
 
