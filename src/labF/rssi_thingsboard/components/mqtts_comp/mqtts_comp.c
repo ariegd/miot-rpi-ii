@@ -170,7 +170,24 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
                 free(json_string); // IMPORTANTE: Liberar memoria
             }
             break;
-
+        // Limpieza Automática de Credenciales Corruptas
+        case MQTT_EVENT_ERROR:
+            if (event->error_handle->error_type == MQTT_ERROR_TYPE_CONNECTION_REFUSED) {
+                    // Corregido: REFUSE en lugar de REFUSED
+                    if (event->error_handle->connect_return_code == MQTT_CONNECTION_REFUSE_NOT_AUTHORIZED) {
+                        ESP_LOGE(TAG, "¡Token no válido! Borrando NVS y reintentando provisionamiento...");
+                        
+                        nvs_handle_t my_handle;
+                        if (nvs_open("storage", NVS_READWRITE, &my_handle) == ESP_OK) {
+                            nvs_erase_key(my_handle, "tb_token");
+                            nvs_commit(my_handle);
+                            nvs_close(my_handle);
+                        }
+                        
+                        esp_restart(); 
+                    }
+                }
+            break;
         default:
             break;
     }
