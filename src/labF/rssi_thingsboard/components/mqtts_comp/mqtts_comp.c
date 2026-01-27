@@ -26,6 +26,7 @@
 #include "nvs_flash.h"
 
 #include "esp_crt_bundle.h" // <--- IMPORTANTE: Necesario para esp_crt_bundle_attach
+#include "esp_wifi.h" // <--- NUEVA INCLUSIÓN
 
 // Variables para manejar el estado
 static char thingsboard_token[128] = {0};
@@ -187,6 +188,7 @@ static void mqtt_app_start(void)
     const char *username_to_use;
     //const char *uri_to_use = "mqtts://demo.thingsboard.io:8883";
     //const char *uri_to_use = "mqtt://demo.thingsboard.io:1883";
+    //const char *uri_to_use = "mqtts://thingsboard.cloud:8883"; // generar
     const char *uri_to_use = "mqtts://mqtt.eu.thingsboard.cloud:8883";
 
     if (is_provisioning_mode) {
